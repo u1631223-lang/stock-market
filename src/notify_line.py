@@ -1,53 +1,79 @@
 """
 LINE通知モジュール
 
-LINE Notify APIを使用して、スクレイピング結果の通知を送信します。
+LINE Messaging APIを使用して、スクレイピング結果の通知を送信します。
+
+注意: LINE Notifyは2025年3月31日にサービス終了したため、
+      LINE Messaging API (push message) に移行しました。
 """
 
 import os
 import requests
 from typing import List, Dict
-from config import LINE_NOTIFY_API
+from config import LINE_MESSAGING_API_PUSH
 
 
-def send_line_notify(message: str, token: str = None) -> bool:
+def send_line_notify(message: str, token: str = None, user_id: str = None) -> bool:
     """
-    LINE Notify APIにメッセージを送信する
+    LINE Messaging API (push message) でメッセージを送信する
 
     Args:
         message: 送信するメッセージ
-        token: LINE Notify トークン（省略時は環境変数から取得）
+        token: LINE Channel Access Token（省略時は環境変数 LINE_CHANNEL_ACCESS_TOKEN から取得）
+        user_id: 送信先のLINE User ID（省略時は環境変数 LINE_TARGET_USER_ID から取得）
 
     Returns:
         bool: 送信成功時 True、失敗時 False
 
     Raises:
-        ValueError: トークンが設定されていない場合
+        ValueError: トークンまたはユーザーIDが設定されていない場合
 
     Examples:
         >>> send_line_notify("テストメッセージ")
         True
-        >>> send_line_notify("テストメッセージ", token="your_token")
+        >>> send_line_notify("テストメッセージ", token="your_token", user_id="U1234...")
         True
     """
     # トークンが指定されていない場合は環境変数から取得
     if token is None:
-        token = os.getenv("LINE_NOTIFY_TOKEN")
+        token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 
     if not token:
-        raise ValueError("LINE_NOTIFY_TOKEN が設定されていません")
+        raise ValueError("LINE_CHANNEL_ACCESS_TOKEN が設定されていません")
 
-    # LINE Notify API にリクエスト
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {"message": message}
+    # ユーザーIDが指定されていない場合は環境変数から取得
+    if user_id is None:
+        user_id = os.getenv("LINE_TARGET_USER_ID")
+
+    if not user_id:
+        raise ValueError("LINE_TARGET_USER_ID が設定されていません")
+
+    # LINE Messaging API (push) にリクエスト
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    # Messaging API のメッセージフォーマット
+    data = {
+        "to": user_id,
+        "messages": [
+            {
+                "type": "text",
+                "text": message
+            }
+        ]
+    }
 
     try:
-        response = requests.post(LINE_NOTIFY_API, headers=headers, data=data, timeout=10)
+        response = requests.post(LINE_MESSAGING_API_PUSH, headers=headers, json=data, timeout=10)
         response.raise_for_status()
-        print(f"✅ LINE通知送信成功")
+        print(f"✅ LINE通知送信成功 (宛先: {user_id[:10]}...)")
         return True
     except requests.exceptions.RequestException as e:
         print(f"❌ LINE通知送信エラー: {e}")
+        if hasattr(e.response, 'text'):
+            print(f"   レスポンス: {e.response.text}")
         return False
 
 
@@ -137,17 +163,26 @@ def main():
 
     テストメッセージを送信します。
     """
-    print("=== LINE通知テスト ===\n")
+    print("=== LINE通知テスト (Messaging API) ===\n")
 
     # 環境変数の確認
-    token = os.getenv("LINE_NOTIFY_TOKEN")
+    token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+    user_id = os.getenv("LINE_TARGET_USER_ID")
+
     if not token:
-        print("❌ LINE_NOTIFY_TOKEN が設定されていません")
+        print("❌ LINE_CHANNEL_ACCESS_TOKEN が設定されていません")
         print("\n設定方法:")
-        print('export LINE_NOTIFY_TOKEN="your_token_here"')
+        print('export LINE_CHANNEL_ACCESS_TOKEN="your_channel_access_token"')
         return
 
-    print(f"✅ LINE_NOTIFY_TOKEN: 設定済み (長さ: {len(token)}文字)\n")
+    if not user_id:
+        print("❌ LINE_TARGET_USER_ID が設定されていません")
+        print("\n設定方法:")
+        print('export LINE_TARGET_USER_ID="your_user_id"')
+        return
+
+    print(f"✅ LINE_CHANNEL_ACCESS_TOKEN: 設定済み (長さ: {len(token)}文字)")
+    print(f"✅ LINE_TARGET_USER_ID: 設定済み ({user_id[:10]}...)\n")
 
     # テストメッセージ1: シンプルなメッセージ
     print("【テスト1】シンプルなメッセージ送信")

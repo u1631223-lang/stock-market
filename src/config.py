@@ -59,8 +59,12 @@ RETRY_DELAYS = [5, 10, 20]
 DATA_DIR = "data"
 
 # ===========================
-# LINE Notify設定
+# LINE 通知設定
 # ===========================
 
-# LINE Notify API エンドポイント
-LINE_NOTIFY_API = "https://notify-api.line.me/api/notify"
+# LINE Messaging API エンドポイント (push message)
+# 注意: LINE Notifyは2025年3月31日にサービス終了
+LINE_MESSAGING_API_PUSH = "https://api.line.me/v2/bot/message/push"
+
+# 廃止予定: LINE Notify API (2025年3月31日終了)
+# LINE_NOTIFY_API = "https://notify-api.line.me/api/notify"

@@ -1,0 +1,102 @@
+name: Test Messaging API Configuration
+
+on:
+  workflow_dispatch:  # 手動実行専用
+
+jobs:
+  test-messaging-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check LINE_CHANNEL_ACCESS_TOKEN
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$LINE_CHANNEL_ACCESS_TOKEN" ]; then
+            echo "❌ エラー: LINE_CHANNEL_ACCESS_TOKEN が設定されていません"
+            echo "GitHub Settings → Secrets and variables → Actions で設定してください"
+            exit 1
+          else
+            echo "✅ LINE_CHANNEL_ACCESS_TOKEN は正しく設定されています"
+            echo "トークン長: ${#LINE_CHANNEL_ACCESS_TOKEN} 文字"
+          fi
+
+      - name: Check LINE_TARGET_USER_ID
+        env:
+          LINE_TARGET_USER_ID: ${{ secrets.LINE_TARGET_USER_ID }}
+        run: |
+          if [ -z "$LINE_TARGET_USER_ID" ]; then
+            echo "❌ エラー: LINE_TARGET_USER_ID が設定されていません"
+            echo "GitHub Settings → Secrets and variables → Actions で設定してください"
+            exit 1
+          else
+            echo "✅ LINE_TARGET_USER_ID は正しく設定されています"
+            echo "User ID: ${LINE_TARGET_USER_ID:0:10}..."
+          fi
+
+      - name: Test Messaging API connection
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_TARGET_USER_ID: ${{ secrets.LINE_TARGET_USER_ID }}
+        run: |
+          cd src
+          python3 << 'PYTHON_SCRIPT'
+import os
+import sys
+from datetime import datetime
+
+# notify_line.pyをインポートしてテスト送信
+sys.path.insert(0, '.')
+from notify_line import send_line_notify
+
+token = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
+user_id = os.environ.get('LINE_TARGET_USER_ID')
+
+if not token:
+    print("❌ トークンが環境変数にありません")
+    sys.exit(1)
+
+if not user_id:
+    print("❌ ユーザーIDが環境変数にありません")
+    sys.exit(1)
+
+# テストメッセージを送信
+now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+message = f"""
+🔔 Messaging API 設定テスト
+
+✅ LINE_CHANNEL_ACCESS_TOKEN が正しく設定されています
+✅ LINE_TARGET_USER_ID が正しく設定されています
+
+このメッセージが届けば、通知機能は正常です。
+
+📅 テスト実行日時: {now}
+🤖 実行環境: GitHub Actions
+"""
+
+try:
+    success = send_line_notify(message, token=token, user_id=user_id)
+    if success:
+        print("✅ Messaging API通知のテスト送信に成功しました")
+        sys.exit(0)
+    else:
+        print("❌ Messaging API通知の送信に失敗しました")
+        sys.exit(1)
+except Exception as e:
+    print(f"❌ エラーが発生しました: {e}")
+    sys.exit(1)
+PYTHON_SCRIPT
