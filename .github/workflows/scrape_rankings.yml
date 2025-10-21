@@ -1,0 +1,53 @@
+name: Scheduled Ranking Scrape
+
+on:
+  schedule:
+    # JST 09:15 (UTC 00:15) - 朝ランキング
+    - cron: '15 0 * * 1-5'
+    # JST 09:30 (UTC 00:30) - 朝ランキング
+    - cron: '30 0 * * 1-5'
+    # JST 12:00 (UTC 03:00) - 朝ランキング
+    - cron: '0 3 * * 1-5'
+    # JST 12:45 (UTC 03:45) - 午後ランキング
+    - cron: '45 3 * * 1-5'
+    # JST 14:30 (UTC 05:30) - 午後ランキング
+    - cron: '30 5 * * 1-5'
+
+  workflow_dispatch:  # 手動実行を許可
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run scraper
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          cd src
+          python scrape_rankings.py
+
+      - name: Configure Git
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push data
+        run: |
+          git add data/
+          git diff --staged --quiet || git commit -m "Add ranking data: $(date +'%Y-%m-%d %H:%M')"
+          git push

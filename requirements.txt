@@ -1,0 +1,12 @@
+# 松井証券ランキング自動取得システム - 依存関係
+# Python 3.11+
+
+# HTTP通信
+requests>=2.31.0
+
+# HTMLパース
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# 日本の祝日判定
+jpholiday>=0.1.0
