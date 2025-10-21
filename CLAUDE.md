@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an automated stock ranking scraper that collects top 10 rankings from Matsui Securities (松井証券) at specific times during trading days. It runs on GitHub Actions and sends notifications via LINE Notify.
+This is an automated stock ranking scraper that collects top 10 rankings from Matsui Securities (松井証券) at specific times during trading days. It runs on GitHub Actions and sends notifications via LINE Messaging API.
+
+**Note:** LINE Notify was discontinued on March 31, 2025. This project has been migrated to LINE Messaging API.
 
 **Target URLs:**
 - Morning rankings: `https://finance.matsui.co.jp/ranking-day-trading-morning/index?condition=0&market=0`
@@ -27,7 +29,7 @@ This is an automated stock ranking scraper that collects top 10 rankings from Ma
 - `config.py` - Central configuration (URLs, time slots, retry logic, User-Agent)
 - `check_workday.py` - Trading day validation (土日祝判定)
 - `scrape_rankings.py` - HTTP requests, HTML parsing, JSON storage, error handling
-- `notify_line.py` - LINE Notify API integration with message formatting
+- `notify_line.py` - LINE Messaging API integration with message formatting
 
 **Data Flow:**
 ```
@@ -48,8 +50,12 @@ pip install -r requirements.txt
 # Test individual modules
 cd src
 python check_workday.py              # Test trading day logic
-export LINE_NOTIFY_TOKEN="your_token"
+
+# Test LINE Messaging API notification
+export LINE_CHANNEL_ACCESS_TOKEN="your_channel_access_token"
+export LINE_TARGET_USER_ID="your_user_id"
 python notify_line.py                # Test LINE notification
+
 python scrape_rankings.py            # Test full scraping flow
 ```
 
@@ -122,7 +128,11 @@ All exceptions in `scrape_rankings.py` trigger LINE notifications with error det
 
 ### Environment Variables
 
-- `LINE_NOTIFY_TOKEN` - Required for notifications. Set in GitHub Secrets (Settings → Secrets and variables → Actions)
+**Required for LINE Messaging API (since March 31, 2025):**
+- `LINE_CHANNEL_ACCESS_TOKEN` - Channel access token from LINE Developers
+- `LINE_TARGET_USER_ID` - User ID to send notifications to
+
+Set these in GitHub Secrets (Settings → Secrets and variables → Actions)
 
 ### Key Config Values (src/config.py)
 

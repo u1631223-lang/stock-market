@@ -3,7 +3,7 @@
 ## 📋 基本情報
 
 - **優先度:** 🟡 中
-- **ステータス:** ✅ 完了
+- **ステータス:** ✅ 完了（Messaging API移行済み: 2025-10-21）
 - **推定工数:** 45分
 - **依存関係:** #1
 - **担当者:** Claude
@@ -20,13 +20,19 @@ LINE Notify APIを使用して、スクレイピング結果の通知を送信�
 
 ---
 
-## 🔄 今後の対応（Messaging API 移行計画）
+## ✅ Messaging API 移行完了（2025-10-21）
 
-- [ ] LINE Developers で公式アカウントと Messaging API チャネルを作成
-- [ ] チャネルアクセストークン・チャネルシークレットの取得と安全な管理方法を決める
-- [ ] `notify_line.py` を Messaging API の push メッセージ送信に対応させる
-- [ ] GitHub Secrets の項目を再設計し（例: `LINE_CHANNEL_ACCESS_TOKEN`）、ドキュメント・ワークフローを更新
-- [ ] Messaging API 版のテスト手順と移行スケジュールを確定
+- [x] LINE Developers で公式アカウントと Messaging API チャネルを作成
+  - プロバイダ: `stock-market`
+  - Channel ID: `2008327755`
+- [x] チャネルアクセストークン・User IDの取得完了
+- [x] `notify_line.py` を Messaging API の push メッセージ送信に対応
+  - エンドポイント: `https://api.line.me/v2/bot/message/push`
+  - JSON形式でのメッセージ送信
+- [x] GitHub Secrets の更新
+  - `LINE_CHANNEL_ACCESS_TOKEN`: チャネルアクセストークン
+  - `LINE_TARGET_USER_ID`: 送信先User ID
+- [x] ワークフロー・ドキュメントの更新完了
 
 ---
 
