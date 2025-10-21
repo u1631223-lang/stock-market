@@ -35,11 +35,34 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. LINE Notify トークンの取得
+### 3. LINE Notify トークンの設定
+
+#### トークンの発行
 
 1. [LINE Notify](https://notify-bot.line.me/ja/) にアクセス
-2. トークンを発行
-3. GitHub Secrets に `LINE_NOTIFY_TOKEN` として登録
+2. LINEアカウントでログイン
+3. マイページ → `トークンを発行する` をクリック
+4. トークン名: `市場ランキング通知` など
+5. 通知先: `1:1でLINE Notifyから通知を受け取る` を選択
+6. 発行されたトークンをコピー（⚠️ 一度しか表示されないので注意）
+
+#### GitHub Secrets への登録
+
+1. GitHubリポジトリの `Settings` タブを開く
+2. `Secrets and variables` → `Actions` を選択
+3. `New repository secret` をクリック
+4. Name: `LINE_NOTIFY_TOKEN`
+5. Secret: コピーしたトークンを貼り付け
+6. `Add secret` で保存
+
+#### 確認方法
+
+```bash
+# Actions タブから "Test Secret Configuration" を手動実行
+# ✅ が表示されれば設定成功
+```
+
+詳細は [docs/tickets/ticket-10-github-secrets.md](./docs/tickets/ticket-10-github-secrets.md) を参照してください。
 
 ### 4. GitHub Actions の有効化
 
