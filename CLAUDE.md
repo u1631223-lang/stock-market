@@ -177,6 +177,19 @@ Comprehensive documentation in `docs/`:
 - `implementation-guide.md` - Complete code implementations with troubleshooting
 - `setup-guide.md` - Step-by-step setup from scratch
 
+## System Status
+
+**✅ Production Ready (2025-10-21)**
+
+All components have been tested and verified:
+- ✅ GitHub Actions automatic execution configured
+- ✅ Scraping functionality working correctly
+- ✅ LINE Messaging API notifications verified
+- ✅ Git auto-commit with proper permissions
+- ✅ Error handling and retry logic tested
+
+**Next scheduled execution:** Weekdays at 09:15, 09:30, 12:00, 12:45, 14:30 JST
+
 ## Common Issues
 
 **"ランキングテーブルが見つかりません" error:**
@@ -184,7 +197,8 @@ Comprehensive documentation in `docs/`:
 - Inspect actual page structure and update `scrape_ranking()` table selectors
 
 **LINE notification not working:**
-- Verify `LINE_NOTIFY_TOKEN` is set in GitHub Secrets
+- Verify `LINE_CHANNEL_ACCESS_TOKEN` and `LINE_TARGET_USER_ID` are set in GitHub Secrets
+- User ID must be in format `Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` (33 characters starting with U)
 - Test token validity locally with `notify_line.py`
 
 **Execution on holidays:**
@@ -192,7 +206,10 @@ Comprehensive documentation in `docs/`:
 - Check `check_workday.py` logic for date in question
 
 **403 Forbidden errors:**
--松井証券 may have strengthened anti-scraping measures
+- 松井証券 may have strengthened anti-scraping measures
 - May need to adjust User-Agent or implement additional headers
 - Consider adding referrer headers or cookies if needed
-- 6
+
+**GitHub Actions permission errors:**
+- Settings → Actions → General → Workflow permissions
+- Set to "Read and write permissions"
