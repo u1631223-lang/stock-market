@@ -14,7 +14,8 @@
 
 ## 📝 概要
 
-LINE Notify トークンを GitHub Secrets に安全に保存し、GitHub Actions から参照できるようにする。
+LINE Notify トークンを GitHub Secrets に安全に保存し、GitHub Actions から参照できるようにする。  
+また、LINE Notify のサービス終了（2025-03-31）に備え、Messaging API 用のシークレット計画を立てる。
 
 ---
 
@@ -36,6 +37,10 @@ LINE Notify トークンを GitHub Secrets に安全に保存し、GitHub Action
   - [ ] 値がマスクされているか確認
 - [ ] 動作確認
   - [ ] GitHub Actions で参照できるかテスト
+- [ ] Messaging API への移行準備
+  - [ ] LINE Developers でチャネルアクセストークンを発行
+  - [ ] 新シークレット名（例: `LINE_CHANNEL_ACCESS_TOKEN`）を決定
+  - [ ] Secrets 登録手順をREADME/Setup Guideに反映
 
 ---
 
@@ -54,6 +59,7 @@ LINE Notify トークンを GitHub Secrets に安全に保存し、GitHub Action
 - [ ] Secret名が `LINE_NOTIFY_TOKEN` である
 - [ ] GitHub Actions から参照可能である
 - [ ] トークンが漏洩していない（コードやログに含まれていない）
+- [ ] Messaging API 用チャネルアクセストークンの登録計画がまとまっている
 
 ---
 
@@ -80,7 +86,7 @@ LINE Notify トークンを GitHub Secrets に安全に保存し、GitHub Action
    - 表示されたトークンをコピー
    - ⚠️ **重要**: この画面は二度と表示されないので、安全に記録
 
-### 2. GitHub Secrets 登録
+### 2. GitHub Secrets 登録（LINE Notify / Messaging API）
 
 1. **GitHubリポジトリを開く**
    - ブラウザで自分のリポジトリページにアクセス
@@ -99,6 +105,8 @@ LINE Notify トークンを GitHub Secrets に安全に保存し、GitHub Action
 6. **確認**
    - Secrets 一覧に `LINE_NOTIFY_TOKEN` が表示される
    - 値は `***` でマスクされている
+
+> Messaging API へ移行する際は、同じ手順で `LINE_CHANNEL_ACCESS_TOKEN` など新しい名称で登録します。
 
 ### 3. 動作確認
 
@@ -202,3 +210,4 @@ LINE_TOKEN = os.getenv("LINE_NOTIFY_TOKEN")  # ✅ 正しい
 | 2025-10-21 | README.mdにLINE Notify設定手順を詳細化 | セットアップ手順を拡充 |
 | 2025-10-21 | コードベースでのシークレット使用状況確認 | `notify_line.py:35,38,143,145,147,150` で正しく環境変数から取得 |
 | 2025-10-21 | .gitignoreに.env除外設定を確認 | 既に設定済み（35-37行目） |
+| 2025-10-21 | Messaging API 移行計画を追記 | Secrets命名と移行タスクを整理 |

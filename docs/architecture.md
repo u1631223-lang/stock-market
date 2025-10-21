@@ -50,14 +50,14 @@
 │                            ↓                                 │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │  5. 通知送信 (notify_line.py)                        │  │
-│  │     └─ LINE Notify API                               │  │
+│  │     └─ LINE Notify / Messaging API                   │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
                             ↓
         ┌───────────────────┴───────────────────┐
         ↓                                       ↓
 ┌───────────────────┐                 ┌─────────────────┐
-│  GitHub Repository│                 │   LINE Notify   │
+│  GitHub Repository│                 │  LINE Notify*  │
 │   (Data Storage)  │                 │  (User's Phone) │
 │                   │                 │                 │
 │  data/            │                 │  📱 通知メッセージ │
@@ -135,14 +135,14 @@ def main()
 ---
 
 ### 3. notify_line.py
-**責務**: LINE Notifyへの通知送信
+**責務**: LINE Notify（将来的に Messaging API）への通知送信
 
 **主要関数**:
 
 ```python
 def send_line_notify(message: str, token: str) -> bool
     """LINE Notifyにメッセージを送信"""
-    # LINE Notify API呼び出し
+    # TODO: Messaging API 対応版で差し替える
     # ステータスコード確認
     # エラーハンドリング
 ```
@@ -416,9 +416,10 @@ for attempt in range(max_retries):
 - ページ構造変更時はコード修正が必要
 - robots.txt は確認済み（問題なし想定）
 
-### 3. LINE Notify の制約
-- 1時間あたり1,000回まで（今回は十分）
-- メッセージ長は最大1,000文字
+### 3. LINE 通知の制約
+- LINE Notify: 1時間あたり1,000回 / 最大1,000文字（2025-03-31で提供終了）
+- Messaging API: 無料プランは月1,000通まで、超過すると従量課金
+- 送信先ユーザーIDの管理や友だち追加が必要（Messaging API）
 
 ---
 
@@ -426,9 +427,9 @@ for attempt in range(max_retries):
 
 1. **リポジトリ作成**: GitHub上に market リポジトリ作成
 2. **コード実装**: 全スクリプトとワークフローファイル作成
-3. **LINE Notify設定**:
-   - LINE Notifyでトークン発行
-   - GitHub Secretsに登録
+3. **通知設定**:
+   - （短期）LINE Notifyでトークン発行し GitHub Secrets に登録
+   - （中長期）LINE Messaging API で公式アカウント作成、チャネルアクセストークンをSecretsに登録
 4. **初回テスト実行**: workflow_dispatch で手動実行
 5. **HTML構造確認**: 取得データが正しいか確認
 6. **本番運用開始**: cron自動実行の監視開始

@@ -1,0 +1,11 @@
+# Project Overview
+- **Name:** 松井証券ランキング自動取得システム (market)
+- **Purpose:** Automate scraping of Matsui Securities day-trading ranking pages at scheduled JST time slots, persist top-10 results as JSON, and notify via LINE.
+- **Primary Components:**
+  - `src/config.py` centralises URLs, scheduling, retry, and HTTP settings.
+  - `src/scrape_rankings.py` orchestrates time-slot detection, scraping (requests + BeautifulSoup), JSON output, and LINE notifications.
+  - Planned modules: `check_workday.py` for business-day checks, `notify_line.py` for LINE Notify integration.
+- **Environment:** Python 3.11+, runs locally or via GitHub Actions on Ubuntu/Darwin.
+- **Key Dependencies:** requests, beautifulsoup4, lxml, jpholiday.
+- **Data Output:** JSON files saved under `data/morning` and `data/afternoon` named `ranking_YYYYMMDD_HHMM.json`.
+- **Automation:** Future GitHub Actions workflow will execute scraper on schedule and commit results.

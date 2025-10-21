@@ -212,53 +212,35 @@ now = datetime.now(jst)
 
 ## 外部サービス
 
-### LINE Notify
+### LINE 通知（LINE Notify → Messaging API）
 **用途**: リアルタイム通知
 
-**公式サイト**: https://notify-bot.line.me/
+#### 現状（～2025/03/31）
+- **サービス**: LINE Notify（提供終了予定）
+- **公式サイト**: https://notify-bot.line.me/
+- **API エンドポイント**: `POST https://notify-api.line.me/api/notify`
+- **認証**: 発行済みトークンを `Authorization: Bearer <token>` で送信
+- **制限**: 1時間あたり1,000件 / メッセージ1,000文字まで
+- **対応状況**: 既存 `notify_line.py` が対応済み、Secrets 名は `LINE_NOTIFY_TOKEN`
 
-**機能**:
-- LINEへのメッセージ送信
-- 画像・スタンプ送信（今回は未使用）
-- トークンベース認証
-
-**API エンドポイント**:
-```
-POST https://notify-api.line.me/api/notify
-```
-
-**リクエスト例**:
-```python
-import requests
-
-def send_line_notify(message: str, token: str) -> bool:
-    url = 'https://notify-api.line.me/api/notify'
-    headers = {'Authorization': f'Bearer {token}'}
-    data = {'message': message}
-    response = requests.post(url, headers=headers, data=data)
-    return response.status_code == 200
-```
-
-**料金**: 完全無料
-
-**制限**:
-- 1時間あたり1,000回まで
-- メッセージ長: 最大1,000文字
-
-**トークン取得手順**:
-1. LINE Notify公式サイトにアクセス
-2. LINEアカウントでログイン
-3. 「マイページ」→「トークンを発行する」
-4. トークン名を入力（例: 松井証券ランキング通知）
-5. 通知先を選択（1:1でLINE Notifyから受信）
-6. 発行されたトークンをコピー
-7. GitHub Secretsに登録
+#### 移行後（Messaging API 予定）
+- **サービス**: LINE 公式アカウント（Messaging API）
+- **公式サイト**: https://developers.line.biz/
+- **API エンドポイント**: `POST https://api.line.me/v2/bot/message/push`
+- **認証**: チャネルアクセストークン（長期）を `Authorization: Bearer <channel access token>` で送信
+- **機能**: テキスト・テンプレート・リッチメッセージ等
+- **追加要件**:
+  - チャネル作成と Webhook 設定（今回は送信のみ想定）
+  - 送信先ユーザーID（`userId`）の管理
+  - レート制限・料金（無料枠あり）の考慮
+- **Secrets 名案**: `LINE_CHANNEL_ACCESS_TOKEN`, `LINE_CHANNEL_SECRET`（必要なら）
+- **移行タスク**: `notify_line.py` のAPI切り替え、READMEやワークフローの更新、テストワークフロー新設
 
 **代替案**:
-- **Slack**: ビジネス向け、個人利用には重い
-- **Discord**: ゲーマー向け、日本での普及率低い
-- **Email**: 遅延が大きい、見逃しやすい
-- **Telegram**: 日本での普及率低い
+- **Slack**: ビジネス向け通知
+- **Discord**: コミュニティ向け
+- **Email**: 遅延の可能性あり
+- **Telegram**: 国内利用者が少なめ
 
 ---
 

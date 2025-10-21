@@ -99,10 +99,10 @@ RETRY_DELAYS = [5, 10, 20]
 DATA_DIR = "data"
 
 # ===========================
-# LINE Notify設定
+# LINE Notify設定（将来的に Messaging API へ置き換え）
 # ===========================
 
-# LINE Notify API エンドポイント
+# LINE Notify API エンドポイント（Messaging API 移行後に更新予定）
 LINE_NOTIFY_API = "https://notify-api.line.me/api/notify"
 ```
 

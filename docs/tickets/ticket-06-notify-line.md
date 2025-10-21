@@ -16,6 +16,18 @@
 
 LINE Notify APIを使用して、スクレイピング結果の通知を送信するモジュールを実装する。成功・失敗の通知とメッセージフォーマット機能を提供。
 
+> **重要:** LINE Notify は 2025年3月31日に提供終了予定のため、Messaging API への移行計画立案と実装が追加タスクとして必要です。
+
+---
+
+## 🔄 今後の対応（Messaging API 移行計画）
+
+- [ ] LINE Developers で公式アカウントと Messaging API チャネルを作成
+- [ ] チャネルアクセストークン・チャネルシークレットの取得と安全な管理方法を決める
+- [ ] `notify_line.py` を Messaging API の push メッセージ送信に対応させる
+- [ ] GitHub Secrets の項目を再設計し（例: `LINE_CHANNEL_ACCESS_TOKEN`）、ドキュメント・ワークフローを更新
+- [ ] Messaging API 版のテスト手順と移行スケジュールを確定
+
 ---
 
 ## 🎯 タスク一覧

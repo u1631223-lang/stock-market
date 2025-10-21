@@ -71,9 +71,9 @@ DATA_DIR = "data"
 DATETIME_FORMAT = "%Y%m%d_%H%M"
 JSON_INDENT = 2
 
-# LINE Notify設定
+# LINE Notify設定（2025/03/31で提供終了 → Messaging APIへ移行予定）
 LINE_NOTIFY_TOKEN = os.environ.get("LINE_NOTIFY_TOKEN", "")
-LINE_NOTIFY_URL = "https://notify-api.line.me/api/notify"
+LINE_NOTIFY_URL = "https://notify-api.line.me/api/notify"  # TODO: Messaging APIに合わせて置き換え
 
 # ログ設定
 LOG_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
 ```python
 """
-LINE Notify通知モジュール
+LINE Notify通知モジュール（Messaging API への置き換え予定）
 """
 import requests
 from typing import Optional
@@ -171,6 +171,9 @@ from config import LINE_NOTIFY_TOKEN, LINE_NOTIFY_URL, REQUEST_TIMEOUT
 def send_line_notify(message: str, token: Optional[str] = None) -> bool:
     """
     LINE Notifyにメッセージを送信
+
+    Note:
+        LINE Notifyサービス終了後は Messaging API 版の実装に差し替える必要がある。
 
     Args:
         message: 送信するメッセージ
@@ -693,8 +696,8 @@ git push -u origin main
 1. GitHubリポジトリページを開く
 2. Settings → Secrets and variables → Actions
 3. `New repository secret` をクリック
-4. Name: `LINE_NOTIFY_TOKEN`
-5. Secret: （LINE Notifyで取得したトークン）
+4. Name: `LINE_NOTIFY_TOKEN`（短期） / 今後は `LINE_CHANNEL_ACCESS_TOKEN` 等の名称を追加予定
+5. Secret: （LINE Notifyで取得したトークン、または Messaging API のチャネルアクセストークン）
 6. `Add secret` をクリック
 
 ### ステップ8: ワークフロー手動実行
@@ -787,7 +790,7 @@ print(f"祝日: {jpholiday.is_holiday(date)}")
 ✅ 平日の指定時刻に自動実行
 ✅ ランキングデータの自動取得
 ✅ JSON形式でのデータ保存
-✅ LINE Notifyでのリアルタイム通知
+✅ LINE Notifyでのリアルタイム通知（Messaging API への移行計画あり）
 ✅ エラー時の自動通知
 ✅ リトライ機能による信頼性向上
 

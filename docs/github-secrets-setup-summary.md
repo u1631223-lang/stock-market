@@ -18,7 +18,7 @@
 **確認内容:**
 - `LINE_NOTIFY_TOKEN` が設定されているか
 - トークンの文字数
-- LINE Notify APIへの実際の接続テスト
+- LINE Notify APIへの実際の接続テスト（サービス終了まで利用可）
 
 ### 2. コードベースの確認 ✅
 
@@ -48,7 +48,7 @@
 **参照リンク:**
 - 詳細手順: [ticket-10-github-secrets.md](./tickets/ticket-10-github-secrets.md)
 
-## ユーザーが実施する手動作業
+## ユーザーが実施する手動作業（短期）
 
 以下の作業は、ユーザー自身が実施する必要があります:
 
@@ -91,6 +91,14 @@ python notify_line.py
 
 LINE に通知が届けば成功です。
 
+## Messaging API への移行準備（中長期）
+
+1. [LINE Developers](https://developers.line.biz/) でプロバイダと Messaging API チャネルを作成  
+2. 長期チャネルアクセストークンを発行し、安全に保管  
+3. GitHub Secrets に `LINE_CHANNEL_ACCESS_TOKEN`（仮）を追加予定  
+4. `notify_line.py` / ワークフロー / README を Messaging API 仕様へ更新するタスクを作成  
+5. Messaging API 用テストワークフロー（仮称: `test-messaging-secret.yml`）を新設する
+
 ## セキュリティチェックリスト
 
 - [x] `.env` が `.gitignore` に含まれている
@@ -100,6 +108,7 @@ LINE に通知が届けば成功です。
 - [ ] **ユーザー作業:** LINE Notify トークンを発行
 - [ ] **ユーザー作業:** GitHub Secrets に登録
 - [ ] **ユーザー作業:** テストワークフローで確認
+- [ ] **移行計画:** Messaging API 用のシークレットとテスト手順を定義
 
 ## トラブルシューティング
 
@@ -115,7 +124,7 @@ LINE に通知が届けば成功です。
 2. Secret名のスペルが正確か確認（大文字小文字も一致）
 3. ワークフローファイルで `secrets.LINE_NOTIFY_TOKEN` を参照しているか確認
 
-### LINE 通知が届かない
+### LINE 通知が届かない（LINE Notify）
 
 **確認事項:**
 1. トークンが正しく発行されているか
@@ -126,6 +135,12 @@ LINE に通知が届けば成功です。
 1. LINE Notify マイページで古いトークンを削除
 2. 新しいトークンを発行
 3. GitHub Secrets を更新
+
+### Messaging API への移行後に通知できない
+
+1. チャネルアクセストークンに送信権限があるか確認
+2. 対象ユーザー（userId）が公式アカウントを友だち追加しているか確認
+3. APIレスポンスのエラーコードを確認し、レート制限や認可エラーを対処
 
 ## 関連ファイル
 

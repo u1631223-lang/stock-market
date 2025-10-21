@@ -20,6 +20,8 @@
 
 ## セットアップ手順
 
+> **重要:** LINE Notify は 2025年3月31日にサービス終了予定です。以下の手順は終了までの暫定対応であり、並行して LINE Messaging API への移行準備を進めてください。
+
 ### ステップ1: LINE Notifyトークンの取得
 
 #### 1-1. LINE Notify公式サイトにアクセス
@@ -488,6 +490,18 @@ git push
 2. **可視化**: グラフ・ダッシュボード作成
 3. **差分通知**: 前回からの順位変動を通知
 4. **CSV出力**: データ分析用のCSV変換
+
+---
+
+## LINE Messaging API への移行準備（推奨）
+
+1. [LINE Developers](https://developers.line.biz/) でプロバイダを作成し、Messaging API チャネルを追加
+2. チャネルアクセストークン（長期）とチャネルシークレットをメモし、GitHub Secrets に登録する名称を検討
+3. 送信対象となるユーザーID（userId）を取得（公式アカウントを友だち追加してから取得可能）
+4. `notify_line.py` と GitHub Actions ワークフローを Messaging API の push メッセージ送信仕様に合わせて改修
+5. 旧 LINE Notify 用の設定は 2025/03/31 までに削除する計画を立案
+
+移行作業が完了するまでは、本ガイドの LINE Notify 手順を暫定的に活用してください。
 
 ---
 
