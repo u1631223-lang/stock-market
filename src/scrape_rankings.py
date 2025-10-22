@@ -127,11 +127,37 @@ RankingList = List[RankingRecord]
 
 
 def get_current_time_slot() -> Optional[str]:
-    """現在時刻が属する取得対象を判定する。"""
-
+    """現在時刻が属する取得対象を判定する。
+    
+    GitHub Actionsのcron実行には遅延が発生することがあるため、
+    設定時刻の±15分以内であれば該当する時間帯として判定する。
+    
+    注意: 複数の時間帯が重なる場合は、最も近い時刻の時間帯を返す。
+    """
     now = datetime.datetime.now(JST)
-    current_time = now.strftime("%H:%M")
-    return TIME_SLOTS.get(current_time)
+    
+    best_match = None
+    min_diff = float('inf')
+    
+    # 各TIME_SLOTに対して、最も近い時刻を探す
+    for time_str, target in TIME_SLOTS.items():
+        slot_hour, slot_minute = map(int, time_str.split(":"))
+        slot_time = now.replace(hour=slot_hour, minute=slot_minute, second=0, microsecond=0)
+        
+        # 現在時刻との差分を計算
+        time_diff = abs((now - slot_time).total_seconds())
+        
+        # ±15分（900秒）以内で、かつ最も近い時刻を選択
+        if time_diff <= 900 and time_diff < min_diff:
+            min_diff = time_diff
+            best_match = (time_str, target)
+    
+    if best_match:
+        time_str, target = best_match
+        logger.info(f"現在時刻 {now.strftime('%H:%M')} は {time_str} の実行時間帯です（許容範囲: ±15分）")
+        return target
+    
+    return None
 
 
 def scrape_ranking(url: str) -> RankingList:
