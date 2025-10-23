@@ -291,6 +291,47 @@ def save_to_json(data: Dict[str, Any], target: str) -> str:
     return str(filepath)
 
 
+def load_previous_ranking(target: str) -> Optional[RankingList]:
+    """
+    前回保存されたランキングデータを読み込む。
+    
+    Args:
+        target: "morning" or "afternoon"
+    
+    Returns:
+        RankingList: 前回のランキングデータ、存在しない場合はNone
+    """
+    target_dir = DATA_ROOT / target
+    
+    if not target_dir.exists():
+        logger.info("前回のランキングデータが存在しません: %s", target_dir)
+        return None
+    
+    # JSONファイルを新しい順に取得
+    json_files = sorted(
+        target_dir.glob("ranking_*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True
+    )
+    
+    # 最新のファイルを読み込む（1つ目は現在実行中のため、2つ目を取得）
+    # ただし、まだ保存されていない場合は1つ目を取得
+    if len(json_files) >= 1:
+        prev_file = json_files[0]
+        try:
+            with prev_file.open("r", encoding="utf-8") as file:
+                data = json.load(file)
+                rankings = data.get("rankings", [])
+                logger.info("前回のランキングデータを読み込みました: %s (%d件)", prev_file.name, len(rankings))
+                return rankings
+        except (json.JSONDecodeError, IOError) as exc:
+            logger.warning("前回のランキングデータの読み込みに失敗: %s", exc)
+            return None
+    
+    logger.info("前回のランキングファイルが見つかりません")
+    return None
+
+
 def main() -> None:
     """ランキング取得から保存までのメイン処理を実行する。"""
 
@@ -321,6 +362,9 @@ def main() -> None:
     if url is None:
         raise KeyError(f"URL for target '{target}' is not defined in config.")
 
+    # 前回のランキングを読み込む
+    previous_rankings = load_previous_ranking(target)
+
     try:
         rankings = scrape_ranking(url)
     except Exception as exc:
@@ -343,7 +387,8 @@ def main() -> None:
 
     filepath = save_to_json(data, target)
 
-    message = format_success_message(datetime_str, target, rankings)
+    # 前回のランキングと比較してメッセージを作成
+    message = format_success_message(datetime_str, target, rankings, previous_rankings)
     send_line_notify(message)
     if not LINE_NOTIFY_AVAILABLE:
         logger.info("LINE通知はログ出力のみ (notify_line.py 未実装)。")

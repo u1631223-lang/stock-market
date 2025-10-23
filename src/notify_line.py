@@ -77,14 +77,15 @@ def send_line_notify(message: str, token: str = None, user_id: str = None) -> bo
         return False
 
 
-def format_success_message(datetime_str: str, target: str, rankings: List[Dict]) -> str:
+def format_success_message(datetime_str: str, target: str, rankings: List[Dict], previous_rankings: List[Dict] = None) -> str:
     """
-    成功時のメッセージをフォーマットする
+    成功時のメッセージをフォーマートする
 
     Args:
         datetime_str: 日時文字列（例: "2025-10-20 09:15"）
         target: "morning" or "afternoon"
         rankings: ランキングデータのリスト
+        previous_rankings: 前回のランキングデータ（オプション）
 
     Returns:
         str: フォーマット済みメッセージ
@@ -97,17 +98,29 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict])
         >>> msg = format_success_message("2025-10-21 09:15", "morning", rankings)
         >>> print(msg)
         📊 2025-10-21 09:15
-        朝ランキング
+        午前中資金流入ランキング
         ...
     """
     # 日本語の時間帯名
-    target_name = "朝" if target == "morning" else "午後"
+    target_name = "午前中資金流入" if target == "morning" else "午後資金流入"
 
-    # 基本メッセージ（「成功」表記を削除）
+    # 基本メッセージ
     message = f"📊 {datetime_str}\n"
     message += f"{target_name}ランキング\n"
 
-    # ベスト10全件を表示（株価変動率も含む）
+    # 前回ランキングから銘柄コード→順位のマップを作成
+    prev_rank_map = {}
+    if previous_rankings:
+        for item in previous_rankings:
+            code = item.get("code", "")
+            rank_str = item.get("rank", "")
+            if code and rank_str:
+                try:
+                    prev_rank_map[code] = int(rank_str)
+                except (ValueError, TypeError):
+                    pass
+
+    # ベスト10全件を表示（株価変動率、ランキング変動も含む）
     if rankings:
         message += "\n"
         for i, item in enumerate(rankings[:10]):  # 最大10件
@@ -123,7 +136,32 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict])
             else:
                 change_percent = "-"
             
-            message += f"{rank}位: {name} ({code}) {change_percent}\n"
+            # ランキング変動を計算（前回データがある場合のみ）
+            rank_change_icon = ""
+            if previous_rankings:  # 前回データがある場合のみ変動を表示
+                if code in prev_rank_map:
+                    try:
+                        current_rank = int(rank)
+                        prev_rank = prev_rank_map[code]
+
+                        if current_rank < prev_rank:
+                            # 順位が上がった（数字が小さくなった）
+                            diff = prev_rank - current_rank
+                            rank_change_icon = f" 🔺↑{diff}"
+                        elif current_rank > prev_rank:
+                            # 順位が下がった（数字が大きくなった）
+                            diff = current_rank - prev_rank
+                            rank_change_icon = f" 🔻↓{diff}"
+                        else:
+                            # 変動なし
+                            rank_change_icon = " -"
+                    except (ValueError, TypeError):
+                        pass
+                elif code != "----":
+                    # 前回のランキングに存在しない（新規ランクイン）
+                    rank_change_icon = " 🆕NEW"
+            
+            message += f"{rank}位: [{code}] {name} {change_percent}{rank_change_icon}\n"
 
     return message
 
