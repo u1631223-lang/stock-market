@@ -91,38 +91,39 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict])
 
     Examples:
         >>> rankings = [
-        ...     {"rank": "1", "code": "1234", "name": "サンプル株式"},
-        ...     {"rank": "2", "code": "5678", "name": "テスト銘柄"},
+        ...     {"rank": "1", "code": "1234", "name": "サンプル株式", "change_percent": "株価変動率：+5.00%"},
+        ...     {"rank": "2", "code": "5678", "name": "テスト銘柄", "change_percent": "株価変動率：+3.00%"},
         ... ]
         >>> msg = format_success_message("2025-10-21 09:15", "morning", rankings)
         >>> print(msg)
-        ✅ [成功] 2025-10-21 09:15
-        朝ランキング取得完了
+        📊 2025-10-21 09:15
+        朝ランキング
         ...
     """
     # 日本語の時間帯名
     target_name = "朝" if target == "morning" else "午後"
 
-    # 基本メッセージ
-    message = f"✅ [成功] {datetime_str}\n"
-    message += f"{target_name}ランキング取得完了\n"
+    # 基本メッセージ（「成功」表記を削除）
+    message = f"📊 {datetime_str}\n"
+    message += f"{target_name}ランキング\n"
 
-    # ベスト3を表示
-    if rankings and len(rankings) >= 3:
-        message += "\n📊 ベスト3:\n"
-        for i in range(3):
-            rank = rankings[i].get("rank", str(i + 1))
-            code = rankings[i].get("code", "----")
-            name = rankings[i].get("name", "不明")
-            message += f"{rank}位: {name} ({code})\n"
-    elif rankings:
-        # 3件未満の場合は全て表示
-        message += "\n📊 取得データ:\n"
-        for item in rankings:
-            rank = item.get("rank", "-")
+    # ベスト10全件を表示（株価変動率も含む）
+    if rankings:
+        message += "\n"
+        for i, item in enumerate(rankings[:10]):  # 最大10件
+            rank = item.get("rank", str(i + 1))
             code = item.get("code", "----")
             name = item.get("name", "不明")
-            message += f"{rank}位: {name} ({code})\n"
+            
+            # 株価変動率を取得（"株価変動率：+5.00%" → "+5.00%"）
+            change_percent_raw = item.get("change_percent", "")
+            if change_percent_raw:
+                # "株価変動率：" プレフィックスを削除
+                change_percent = change_percent_raw.replace("株価変動率：", "").strip()
+            else:
+                change_percent = "-"
+            
+            message += f"{rank}位: {name} ({code}) {change_percent}\n"
 
     return message
 
