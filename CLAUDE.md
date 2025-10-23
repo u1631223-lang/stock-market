@@ -22,20 +22,21 @@ This is an automated stock ranking scraper that collects top 10 rankings from Ma
 
 **Execution Flow:**
 1. `check_workday.py` - Validates trading day (weekend/holiday check using jpholiday)
-2. `scrape_rankings.py` - Main orchestrator: determines time slot, scrapes data, saves JSON
-3. `notify_line.py` - Sends success/failure notifications to LINE
+2. `scrape_rankings.py` - Main orchestrator: determines time slot, scrapes data, loads previous ranking, saves JSON
+3. `notify_line.py` - Sends success/failure notifications to LINE with ranking changes
 4. GitHub Actions commits results to `data/morning/` or `data/afternoon/`
 
 **Module Responsibilities:**
 - `config.py` - Central configuration (URLs, time slots, retry logic, User-Agent)
 - `check_workday.py` - Trading day validation (土日祝判定)
-- `scrape_rankings.py` - HTTP requests, HTML parsing, JSON storage, error handling
-- `notify_line.py` - LINE Messaging API integration with message formatting
+- `scrape_rankings.py` - HTTP requests, HTML parsing, JSON storage, previous ranking loading, error handling
+- `notify_line.py` - LINE Messaging API integration with message formatting and ranking change display
 
 **Data Flow:**
 ```
-GitHub Actions Cron → check_workday → scrape_rankings → BeautifulSoup parsing
-→ JSON save to data/{morning|afternoon}/ → git commit/push → LINE notification
+GitHub Actions Cron → check_workday → scrape_rankings → load previous ranking
+→ BeautifulSoup parsing → JSON save to data/{morning|afternoon}/
+→ git commit/push → LINE notification with ranking changes
 ```
 
 ## Development Commands
@@ -178,18 +179,42 @@ Comprehensive documentation in `docs/`:
 - `implementation-guide.md` - Complete code implementations with troubleshooting
 - `setup-guide.md` - Step-by-step setup from scratch
 
+## LINE Notification Format
+
+**New format (2025-10-24):**
+```
+📊 2025-10-24 09:32
+午前中資金流入ランキング
+
+1位: [285A] キオクシアホールディングス +11.94% 🔺↑1
+2位: [9984] ソフトバンクグループ +3.37% 🔻↓1
+3位: [6920] レーザーテック +3.90% -
+4位: [6857] アドバンテスト +3.23% 🔺↑1
+5位: [3692] ＦＦＲＩセキュリティ +12.73% 🆕NEW
+...
+```
+
+**Ranking change indicators:**
+- 🔺↑N: Rank improved (moved up N positions)
+- 🔻↓N: Rank declined (moved down N positions)
+- -: No change from previous ranking
+- 🆕NEW: New entry (not in previous top 10)
+
+**Note:** First execution of the day (09:17) shows no ranking changes as there's no previous data to compare.
+
 ## System Status
 
-**✅ Production Ready (2025-10-21)**
+**✅ Production Ready (2025-10-24)**
 
 All components have been tested and verified:
-- ✅ GitHub Actions automatic execution configured
-- ✅ Scraping functionality working correctly
-- ✅ LINE Messaging API notifications verified
+- ✅ GitHub Actions automatic execution configured (cron adjusted to avoid congestion)
+- ✅ Scraping functionality working correctly (top 10 rankings)
+- ✅ LINE Messaging API notifications verified with ranking changes
 - ✅ Git auto-commit with proper permissions
 - ✅ Error handling and retry logic tested
+- ✅ Ranking change detection implemented
 
-**Next scheduled execution:** Weekdays at 09:15, 09:30, 12:00, 12:45, 14:30 JST
+**Next scheduled execution:** Weekdays at 09:17, 09:32, 12:02, 12:47, 14:32 JST (±15分)
 
 ## Common Issues
 
