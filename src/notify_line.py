@@ -168,9 +168,14 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict],
             if change_percent_raw:
                 # "株価変動率：" プレフィックスを削除
                 change_percent = change_percent_raw.replace("株価変動率：", "").strip()
+                # 色絵文字を追加（🟢緑=上昇、🔴赤=下落）
+                if change_percent.startswith("+"):
+                    change_percent = f"🟢{change_percent}"
+                elif change_percent.startswith("-"):
+                    change_percent = f"🔴{change_percent}"
             else:
                 change_percent = "-"
-            
+
             # ランキング変動を計算（前回データがある場合のみ）
             rank_change_icon = ""
             if previous_rankings:  # 前回データがある場合のみ変動を表示

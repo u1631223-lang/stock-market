@@ -2,16 +2,21 @@ name: Scheduled Ranking Scrape
 
 on:
   schedule:
+    # 松井証券ランキング
     # JST 09:20 - 朝ランキング（UTC 00:17,00:32は実行されないため00:20に変更）
     - cron: '20 0 * * 1-5'
     # JST 09:35 - 朝ランキング（UTC 00:17,00:32は実行されないため00:35に変更）
     - cron: '35 0 * * 1-5'
-    # JST 12:00 前後 - 朝ランキング（UTC 03:00は混雑時間帯のため03:02に変更）
+    # JST 12:00 - セクター別騰落ランキング（昼休み）
+    - cron: '0 3 * * 1-5'
+    # JST 12:02 - 朝ランキング（UTC 03:00は混雑時間帯のため03:02に変更）
     - cron: '2 3 * * 1-5'
-    # JST 12:45 前後 - 午後ランキング
+    # JST 12:45 - 午後ランキング
     - cron: '47 3 * * 1-5'
-    # JST 14:30 前後 - 午後ランキング
+    # JST 14:30 - 午後ランキング
     - cron: '32 5 * * 1-5'
+    # JST 16:00 - セクター別騰落ランキング（大引け後）
+    - cron: '0 7 * * 1-5'
 
   workflow_dispatch:  # 手動実行を許可
 
@@ -41,6 +46,7 @@ jobs:
         run: |
           cd src
           python scrape_rankings.py
+          python scrape_sector_ranking.py
 
       - name: Configure Git
         run: |

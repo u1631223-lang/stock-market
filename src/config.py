@@ -13,11 +13,14 @@ URLS = {
     "afternoon": "https://finance.matsui.co.jp/ranking-day-trading-afternoon/index?condition=0&market=0"
 }
 
+# セクター別騰落ランキング用URL
+SECTOR_RANKING_URL = "https://kabutan.jp/warning/?mode=9_1"
+
 # ===========================
 # スケジュール設定
 # ===========================
 
-# 取得時刻（JST）: HH:MM形式
+# 松井証券ランキング取得時刻（JST）: HH:MM形式
 # キー: 時刻、値: 取得対象（morning or afternoon）
 TIME_SLOTS = {
     "09:20": "morning",
@@ -25,6 +28,13 @@ TIME_SLOTS = {
     "12:02": "morning",
     "12:47": "afternoon",
     "14:32": "afternoon"
+}
+
+# セクター別騰落ランキング取得時刻（JST）: HH:MM形式
+# キー: 時刻、値: 取得対象（midday or closing）
+SECTOR_TIME_SLOTS = {
+    "12:00": "midday",    # 昼休み
+    "16:00": "closing"    # 大引け後
 }
 
 # ===========================
@@ -59,6 +69,9 @@ RETRY_DELAYS = [5, 10, 20]
 
 # データ保存ディレクトリ（プロジェクトルートからの相対パス）
 DATA_DIR = "data"
+
+# セクター別ランキングデータ保存ディレクトリ
+SECTOR_DATA_DIR = "data/sector"
 
 # ===========================
 # LINE 通知設定

@@ -4,32 +4,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an automated stock ranking scraper that collects top 10 rankings from Matsui Securities (松井証券) at specific times during trading days. It runs on GitHub Actions and sends notifications via LINE Messaging API.
+This is an automated stock ranking scraper that collects rankings from Matsui Securities (松井証券) and Kabutan (株探) at specific times during trading days. It runs on GitHub Actions and sends notifications via LINE Messaging API.
 
 **Note:** LINE Notify was discontinued on March 31, 2025. This project has been migrated to LINE Messaging API.
 
 **Target URLs:**
-- Morning rankings: `https://finance.matsui.co.jp/ranking-day-trading-morning/index?condition=0&market=0`
-- Afternoon rankings: `https://finance.matsui.co.jp/ranking-day-trading-afternoon/index?condition=0&market=0`
+
+1. **松井証券ランキング（資金流入）:**
+   - Morning: `https://finance.matsui.co.jp/ranking-day-trading-morning/index?condition=0&market=0`
+   - Afternoon: `https://finance.matsui.co.jp/ranking-day-trading-afternoon/index?condition=0&market=0`
+
+2. **株探セクター別騰落ランキング:**
+   - URL: `https://kabutan.jp/warning/?mode=9_1`
 
 **Execution Schedule (JST, ±15分の許容範囲あり):**
-- Morning: 09:20頃, 09:35頃, 12:02頃
-- Afternoon: 12:47頃, 14:32頃
+- 09:20 - 松井証券 午前中資金流入
+- 09:35 - 松井証券 午前中資金流入
+- **12:00** - **株探 セクター別騰落（昼休み）** ← 新規
+- 12:02 - 松井証券 午前中資金流入
+- 12:47 - 松井証券 午後資金流入
+- 14:32 - 松井証券 午後資金流入
+- **16:00** - **株探 セクター別騰落（大引け後）** ← 新規
 - Only runs on weekdays (excluding Japanese holidays)
 - **注意**: GitHub Actions cronはUTC 00:00-00:30台が実行されないため、09:20,09:35に変更しています
 
 ## Architecture
 
 **Execution Flow:**
+
+**松井証券ランキング:**
 1. `check_workday.py` - Validates trading day (weekend/holiday check using jpholiday)
 2. `scrape_rankings.py` - Main orchestrator: determines time slot, scrapes data, loads previous ranking, saves JSON
 3. `notify_line.py` - Sends success/failure notifications to LINE with ranking changes
 4. GitHub Actions commits results to `data/morning/` or `data/afternoon/`
 
+**株探セクター別ランキング:**
+1. `check_workday.py` - Validates trading day (weekend/holiday check using jpholiday)
+2. `scrape_sector_ranking.py` - Scrapes sector rankings, calculates top5/bottom5, saves JSON
+3. `notify_line.py` - Sends notifications with color-coded sector rankings (🟢 up, 🔴 down)
+4. GitHub Actions commits results to `data/sector/`
+
 **Module Responsibilities:**
 - `config.py` - Central configuration (URLs, time slots, retry logic, User-Agent)
 - `check_workday.py` - Trading day validation (土日祝判定)
-- `scrape_rankings.py` - HTTP requests, HTML parsing, JSON storage, previous ranking loading, error handling
+- `scrape_rankings.py` - Matsui Securities ranking scraper (HTTP requests, HTML parsing, JSON storage)
+- `scrape_sector_ranking.py` - Kabutan sector ranking scraper (HTTP requests, HTML parsing, top5/bottom5 calculation)
 - `notify_line.py` - LINE Messaging API integration with message formatting and ranking change display
 
 **Data Flow:**
@@ -181,26 +200,63 @@ Comprehensive documentation in `docs/`:
 
 ## LINE Notification Format
 
-**New format (2025-10-24):**
+### 松井証券ランキング
+
+**Format (2025-10-24 updated with color indicators):**
 ```
 📊 2025-10-24 09:32
 午前中資金流入ランキング
 
-1位: [285A] キオクシアホールディングス +11.94% 🔺↑1
-2位: [9984] ソフトバンクグループ +3.37% 🔻↓1
-3位: [6920] レーザーテック +3.90% -
-4位: [6857] アドバンテスト +3.23% 🔺↑1
-5位: [3692] ＦＦＲＩセキュリティ +12.73% 🆕NEW
+1位: [285A] キオクシアホールディングス 🟢+11.94% 🔺↑1
+2位: [9984] ソフトバンクグループ 🟢+3.37% 🔻↓1
+3位: [6920] レーザーテック 🟢+3.90% -
+4位: [6857] アドバンテスト 🟢+3.23% 🔺↑1
+5位: [3692] ＦＦＲＩセキュリティ 🟢+12.73% 🆕NEW
 ...
 ```
 
-**Ranking change indicators:**
+**Color indicators:**
+- 🟢 **Green**: Stock price increase (+)
+- 🔴 **Red**: Stock price decrease (-)
+
+### セクター別騰落ランキング
+
+**Format (2025-10-24 new):**
+```
+📊 2025-10-27 12:00
+セクター別騰落ランキング (昼休み)
+
+【上昇TOP5】🟢
+1位: 非鉄金属 +3.06%
+2位: 電気機器 +2.85%
+3位: 輸送用機器 +2.31%
+4位: 機械 +1.98%
+5位: 化学 +1.76%
+
+【下落TOP5】🔴
+1位: 銀行業 -2.34%
+2位: 保険業 -1.98%
+3位: その他金融業 -1.67%
+4位: 海運業 -1.45%
+5位: 鉱業 -1.23%
+
+💡 資金流入: 非鉄金属、電気機器
+💡 資金流出: 銀行業、保険業
+```
+
+**Color indicators:**
+- 🟢 **Green**: Sector increase (top 5 gainers)
+- 🔴 **Red**: Sector decrease (top 5 losers)
+
+## Ranking Change Indicators
+
+**For Matsui Securities rankings:**
 - 🔺↑N: Rank improved (moved up N positions)
 - 🔻↓N: Rank declined (moved down N positions)
 - -: No change from previous ranking
 - 🆕NEW: New entry (not in previous top 10)
 
-**Note:** First execution of the day (09:17) shows no ranking changes as there's no previous data to compare.
+**Note:** First execution of the day (09:20) shows no ranking changes as there's no previous data to compare.
 
 ## System Status
 
@@ -208,13 +264,14 @@ Comprehensive documentation in `docs/`:
 
 All components have been tested and verified:
 - ✅ GitHub Actions automatic execution configured (cron adjusted to avoid congestion)
-- ✅ Scraping functionality working correctly (top 10 rankings)
-- ✅ LINE Messaging API notifications verified with ranking changes
+- ✅ 松井証券ランキング scraping functionality working correctly (top 10 rankings)
+- ✅ 株探セクター別騰落ランキング scraping functionality implemented
+- ✅ LINE Messaging API notifications verified with ranking changes and color indicators
 - ✅ Git auto-commit with proper permissions
 - ✅ Error handling and retry logic tested
 - ✅ Ranking change detection implemented
 
-**Next scheduled execution:** Weekdays at 09:20, 09:35, 12:02, 12:47, 14:32 JST (±15分)
+**Next scheduled execution:** Weekdays at 09:20, 09:35, 12:00, 12:02, 12:47, 14:32, 16:00 JST (±15分)
 
 ## Common Issues
 
