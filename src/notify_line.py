@@ -8,9 +8,10 @@ LINE Messaging APIを使用して、スクレイピング結果の通知を送�
 """
 
 import os
+import time
 import requests
 from typing import List, Dict
-from config import LINE_MESSAGING_API_PUSH
+from config import LINE_MESSAGING_API_PUSH, RETRY_COUNT, RETRY_DELAYS
 
 
 def send_line_notify(message: str, token: str = None, user_id: str = None) -> bool:
@@ -65,16 +66,48 @@ def send_line_notify(message: str, token: str = None, user_id: str = None) -> bo
         ]
     }
 
-    try:
-        response = requests.post(LINE_MESSAGING_API_PUSH, headers=headers, json=data, timeout=10)
-        response.raise_for_status()
-        print(f"✅ LINE通知送信成功 (宛先: {user_id[:10]}...)")
-        return True
-    except requests.exceptions.RequestException as e:
-        print(f"❌ LINE通知送信エラー: {e}")
-        if hasattr(e.response, 'text'):
-            print(f"   レスポンス: {e.response.text}")
-        return False
+    # リトライロジック
+    for attempt in range(1, RETRY_COUNT + 1):
+        try:
+            response = requests.post(LINE_MESSAGING_API_PUSH, headers=headers, json=data, timeout=10)
+            response.raise_for_status()
+            print(f"✅ LINE通知送信成功 (宛先: {user_id[:10]}...)")
+            return True
+        except requests.exceptions.RequestException as e:
+            is_last_attempt = (attempt == RETRY_COUNT)
+            
+            # ステータスコードによってリトライ可否を判断
+            should_retry = False
+            if hasattr(e, 'response') and e.response is not None:
+                status_code = e.response.status_code
+                # 4xx系エラー（401, 403など）はリトライしない
+                if 400 <= status_code < 500:
+                    print(f"❌ LINE通知送信エラー (試行 {attempt}/{RETRY_COUNT}): {e}")
+                    print(f"   ステータスコード: {status_code} - リトライ不可（認証/権限エラー）")
+                    if hasattr(e.response, 'text'):
+                        print(f"   レスポンス: {e.response.text}")
+                    return False
+                # 5xx系エラーやその他はリトライする
+                else:
+                    should_retry = not is_last_attempt
+            else:
+                # ネットワークエラーなどはリトライする
+                should_retry = not is_last_attempt
+            
+            if should_retry:
+                delay = RETRY_DELAYS[attempt - 1]
+                print(f"⚠️ LINE通知送信エラー (試行 {attempt}/{RETRY_COUNT}): {e}")
+                if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                    print(f"   レスポンス: {e.response.text}")
+                print(f"   {delay}秒後にリトライします...")
+                time.sleep(delay)
+            else:
+                print(f"❌ LINE通知送信エラー (試行 {attempt}/{RETRY_COUNT}): {e}")
+                if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                    print(f"   レスポンス: {e.response.text}")
+                return False
+    
+    return False
 
 
 def format_success_message(datetime_str: str, target: str, rankings: List[Dict], previous_rankings: List[Dict] = None) -> str:

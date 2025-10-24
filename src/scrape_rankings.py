@@ -370,7 +370,10 @@ def main() -> None:
     except Exception as exc:
         datetime_str = datetime.datetime.now(JST).strftime(DATETIME_FORMAT)
         error_message = format_error_message(datetime_str, target, str(exc))
-        send_line_notify(error_message)
+        success = send_line_notify(error_message)
+        if not success:
+            logger.error("LINE通知の送信に失敗しました（エラー通知）")
+            raise RuntimeError("LINE通知の送信に失敗しました") from exc
         logger.error("スクレイピングに失敗しました: %s", exc)
         logger.info(separator)
         raise
@@ -389,7 +392,11 @@ def main() -> None:
 
     # 前回のランキングと比較してメッセージを作成
     message = format_success_message(datetime_str, target, rankings, previous_rankings)
-    send_line_notify(message)
+    success = send_line_notify(message)
+    if not success:
+        logger.error("LINE通知の送信に失敗しました（成功通知）")
+        raise RuntimeError("LINE通知の送信に失敗しました")
+    
     if not LINE_NOTIFY_AVAILABLE:
         logger.info("LINE通知はログ出力のみ (notify_line.py 未実装)。")
 
