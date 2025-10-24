@@ -95,7 +95,9 @@ def send_line_notify(message: str, token: str = None, user_id: str = None) -> bo
                 should_retry = not is_last_attempt
             
             if should_retry:
-                delay = RETRY_DELAYS[attempt - 1]
+                # RETRY_DELAYSの範囲外を避けるため、最後の遅延時間を使う
+                delay_index = min(attempt - 1, len(RETRY_DELAYS) - 1)
+                delay = RETRY_DELAYS[delay_index]
                 print(f"⚠️ LINE通知送信エラー (試行 {attempt}/{RETRY_COUNT}): {e}")
                 if hasattr(e, 'response') and hasattr(e.response, 'text'):
                     print(f"   レスポンス: {e.response.text}")
