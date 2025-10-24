@@ -153,13 +153,20 @@ def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
             name_link = name_cell.find("a")
             name = name_link.text.strip() if name_link else ""
 
-            # 前日比（%）: 7番目のtd内のspanのテキスト（%記号を除く）
-            change_percent_cell = cells[6]
+            # 前日比（%）: 6番目のtd内のspanのテキスト（%記号を除く）
+            # 注意: cells[5] が前日比(%)、cells[6] は PER
+            change_percent_cell = cells[5]
             change_span = change_percent_cell.find("span")
             if change_span:
                 change_text = change_span.text.strip()
                 # %記号を除去
                 change_percent = change_text.replace("%", "").strip()
+                # "--" など数値化できない表示は無視
+                try:
+                    float(change_percent)
+                except ValueError:
+                    logger.warning(f"数値化できない前日比: {change_text}")
+                    continue
             else:
                 change_percent = "0.00"
 
@@ -245,9 +252,19 @@ def format_sector_message(datetime_str: str, target: str, top5: List[Dict], bott
     for i, sector in enumerate(bottom5, 1):
         name = sector["name"]
         change = sector["change_percent"]
-        # 符号を明示的に追加（マイナスの場合）
+        # 符号を明示的に追加（符号がない場合のみ、実際の値を見て判定）
         if not change.startswith(("+", "-")):
-            change = f"-{change}"
+            try:
+                # 数値として解釈して符号を判定
+                val = float(change)
+                if val >= 0:
+                    change = f"+{change}"
+                else:
+                    # すでにマイナスなら符号は不要（-0.5 など）
+                    pass
+            except ValueError:
+                # 数値化できない場合はそのまま
+                pass
         message += f"{i}位: {name} {change}%\n"
 
     # サマリー
