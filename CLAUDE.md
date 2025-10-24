@@ -13,10 +13,10 @@ This is an automated stock ranking scraper that collects top 10 rankings from Ma
 - Afternoon rankings: `https://finance.matsui.co.jp/ranking-day-trading-afternoon/index?condition=0&market=0`
 
 **Execution Schedule (JST, ±15分の許容範囲あり):**
-- Morning: 09:17頃, 09:32頃, 12:02頃
+- Morning: 09:20頃, 09:35頃, 12:02頃
 - Afternoon: 12:47頃, 14:32頃
 - Only runs on weekdays (excluding Japanese holidays)
-- **注意**: GitHub Actions cronは混雑時間帯（UTC 00:00, 03:00など）を避けるため、数分ずらして設定しています
+- **注意**: GitHub Actions cronはUTC 00:00-00:30台が実行されないため、09:20,09:35に変更しています
 
 ## Architecture
 
@@ -214,7 +214,7 @@ All components have been tested and verified:
 - ✅ Error handling and retry logic tested
 - ✅ Ranking change detection implemented
 
-**Next scheduled execution:** Weekdays at 09:17, 09:32, 12:02, 12:47, 14:32 JST (±15分)
+**Next scheduled execution:** Weekdays at 09:20, 09:35, 12:02, 12:47, 14:32 JST (±15分)
 
 ## Common Issues
 

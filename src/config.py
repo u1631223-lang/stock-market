@@ -20,11 +20,11 @@ URLS = {
 # 取得時刻（JST）: HH:MM形式
 # キー: 時刻、値: 取得対象（morning or afternoon）
 TIME_SLOTS = {
-    "09:15": "morning",
-    "09:30": "morning",
-    "12:00": "morning",
-    "12:45": "afternoon",
-    "14:30": "afternoon"
+    "09:20": "morning",
+    "09:35": "morning",
+    "12:02": "morning",
+    "12:47": "afternoon",
+    "14:32": "afternoon"
 }
 
 # ===========================
