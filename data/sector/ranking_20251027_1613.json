@@ -1,0 +1,136 @@
+{
+  "datetime": "20251027_1613",
+  "url": "https://kabutan.jp/warning/?mode=9_1",
+  "scraped_at": "2025-10-27T16:13:09.447985+09:00",
+  "sectors": [
+    {
+      "code": "0263",
+      "name": "非鉄金属",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0268",
+      "name": "精密機器",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0279",
+      "name": "証券・商品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0275",
+      "name": "情報・通信業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0267",
+      "name": "輸送用機器",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0266",
+      "name": "電気機器",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0276",
+      "name": "卸売業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0278",
+      "name": "銀行業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0265",
+      "name": "機械",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0259",
+      "name": "石油・石炭",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0252",
+      "name": "鉱業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0272",
+      "name": "海運業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0253",
+      "name": "建設業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0261",
+      "name": "ガラス・土石",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0269",
+      "name": "その他製品",
+      "change_percent": "0.00"
+    }
+  ],
+  "top5": [
+    {
+      "code": "0263",
+      "name": "非鉄金属",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0268",
+      "name": "精密機器",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0279",
+      "name": "証券・商品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0275",
+      "name": "情報・通信業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0267",
+      "name": "輸送用機器",
+      "change_percent": "0.00"
+    }
+  ],
+  "bottom5": [
+    {
+      "code": "0263",
+      "name": "非鉄金属",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0268",
+      "name": "精密機器",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0279",
+      "name": "証券・商品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0275",
+      "name": "情報・通信業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0267",
+      "name": "輸送用機器",
+      "change_percent": "0.00"
+    }
+  ]
+}
