@@ -19,6 +19,7 @@ from scrape_rankings import (
     format_error_message,
     send_line_notify,
     URLS,
+    TIME_SLOTS,
     logger,
 )
 
@@ -46,6 +47,12 @@ def test_scraping_with_override(target: str = "morning"):
 
     logger.info(f"取得URL: {url}")
 
+    # 予定時刻を推定（同じ target に紐づく最も早いスロット）
+    slot_time = next(
+        (time_str for time_str, value in TIME_SLOTS.items() if value == target),
+        None,
+    )
+
     try:
         # スクレイピング実行
         rankings = scrape_ranking(url)
@@ -55,6 +62,7 @@ def test_scraping_with_override(target: str = "morning"):
         datetime_str = now.strftime("%Y%m%d_%H%M")
         data = {
             "datetime": datetime_str,
+            "slot_time": slot_time,
             "target": target,
             "url": url,
             "scraped_at": now.isoformat(),
@@ -72,7 +80,13 @@ def test_scraping_with_override(target: str = "morning"):
             logger.info(f"  {i}. {item.get('name', '不明')} ({item.get('code', '----')})")
 
         # 成功メッセージ
-        message = format_success_message(datetime_str, target, rankings)
+        message = format_success_message(
+            datetime_str,
+            target,
+            rankings,
+            previous_rankings=None,
+            slot_time=slot_time,
+        )
         logger.info("LINE通知メッセージ:")
         logger.info(message)
 
@@ -87,7 +101,12 @@ def test_scraping_with_override(target: str = "morning"):
 
     except Exception as exc:
         datetime_str = datetime.datetime.now(JST).strftime("%Y%m%d_%H%M")
-        error_message = format_error_message(datetime_str, target, str(exc))
+        error_message = format_error_message(
+            datetime_str,
+            target,
+            str(exc),
+            slot_time=slot_time,
+        )
         logger.error("スクレイピングに失敗しました: %s", exc)
         logger.error("エラーメッセージ: %s", error_message)
         logger.info(separator)

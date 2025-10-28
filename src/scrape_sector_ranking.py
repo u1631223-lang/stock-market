@@ -12,7 +12,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 import requests
@@ -45,40 +45,40 @@ logger = logging.getLogger(__name__)
 DATETIME_FORMAT = "%Y%m%d_%H%M"
 
 
-def get_current_time_slot() -> Optional[str]:
-    """
-    現在時刻が属する取得対象を判定する。
+def get_current_time_slot() -> Optional[Tuple[str, str]]:
+    """現在時刻にもっとも近い取得対象と設定時刻を返す。"""
 
-    GitHub Actions の cron 実行には遅延が発生することがあるため、
-    設定時刻の±15分以内であれば該当する時間帯として判定する。
-
-    Returns:
-        str: 取得対象 ("midday" or "closing")、該当なしの場合は None
-    """
     now = datetime.datetime.now(JST)
 
-    best_match = None
-    min_diff = float('inf')
-
-    # 各SECTOR_TIME_SLOTに対して、最も近い時刻を探す
+    slots: List[Tuple[datetime.datetime, str, str]] = []
     for time_str, target in SECTOR_TIME_SLOTS.items():
         slot_hour, slot_minute = map(int, time_str.split(":"))
-        slot_time = now.replace(hour=slot_hour, minute=slot_minute, second=0, microsecond=0)
+        slot_time = now.replace(
+            hour=slot_hour,
+            minute=slot_minute,
+            second=0,
+            microsecond=0,
+        )
+        slots.append((slot_time, time_str, target))
 
-        # 現在時刻との差分を計算
-        time_diff = abs((now - slot_time).total_seconds())
+    if not slots:
+        logger.warning("SECTOR_TIME_SLOTS が定義されていないため、実行時間帯を判定できません。")
+        return None
 
-        # ±15分（900秒）以内で、かつ最も近い時刻を選択
-        if time_diff <= 900 and time_diff < min_diff:
-            min_diff = time_diff
-            best_match = (time_str, target)
+    slots.sort(key=lambda item: item[0])
+    past_slots = [item for item in slots if item[0] <= now]
 
-    if best_match:
-        time_str, target = best_match
-        logger.info(f"現在時刻 {now.strftime('%H:%M')} は {time_str} の実行時間帯です（許容範囲: ±15分）")
-        return target
+    if past_slots:
+        slot_time, time_str, target = past_slots[-1]
+    else:
+        slot_time, time_str, target = slots[0]
 
-    return None
+    logger.info(
+        "現在時刻 %s は %s の実行時間帯として処理します（許容幅制限なし）",
+        now.strftime("%H:%M"),
+        time_str,
+    )
+    return target, time_str
 
 
 def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
@@ -217,7 +217,13 @@ def save_to_json(data: Dict[str, Any], target: str) -> str:
     return str(filepath)
 
 
-def format_sector_message(datetime_str: str, target: str, top5: List[Dict], bottom5: List[Dict]) -> str:
+def format_sector_message(
+    datetime_str: str,
+    target: str,
+    top5: List[Dict],
+    bottom5: List[Dict],
+    slot_time: Optional[str] = None,
+) -> str:
     """
     セクター別ランキングのLINE通知メッセージをフォーマットする。
 
@@ -226,16 +232,18 @@ def format_sector_message(datetime_str: str, target: str, top5: List[Dict], bott
         target: "midday" or "closing"
         top5: 上昇TOP5のリスト
         bottom5: 下落TOP5のリスト
+        slot_time: 取得対象の予定時刻（例: "12:00"）
 
     Returns:
         str: フォーマット済みメッセージ
     """
     # 日本語の時間帯名
     target_name = "昼休み" if target == "midday" else "大引け後"
+    slot_note = f"（対象時刻: {slot_time}）" if slot_time else ""
 
     # 基本メッセージ
     message = f"📊 {datetime_str}\n"
-    message += f"セクター別騰落ランキング ({target_name})\n"
+    message += f"セクター別騰落ランキング ({target_name}){slot_note}\n"
 
     # 上昇TOP5
     message += "\n【上昇TOP5】🟢\n"
@@ -293,7 +301,12 @@ def send_sector_line_notify(message: str) -> bool:
     return send_line_notify(message)
 
 
-def format_error_message(datetime_str: str, target: str, error: str) -> str:
+def format_error_message(
+    datetime_str: str,
+    target: str,
+    error: str,
+    slot_time: Optional[str] = None,
+) -> str:
     """
     エラー時のLINE通知メッセージをフォーマートする。
 
@@ -301,14 +314,17 @@ def format_error_message(datetime_str: str, target: str, error: str) -> str:
         datetime_str: 日時文字列
         target: "midday" or "closing"
         error: エラー内容
+        slot_time: 取得対象の予定時刻（例: "12:00"）
 
     Returns:
         str: フォーマット済みメッセージ
     """
     target_name = "昼休み" if target == "midday" else "大引け後"
 
+    slot_note = f"（対象時刻: {slot_time}）" if slot_time else ""
+
     message = f"❌ [エラー] {datetime_str}\n"
-    message += f"セクター別ランキング取得失敗 ({target_name})\n"
+    message += f"セクター別ランキング取得失敗 ({target_name}){slot_note}\n"
     message += f"\nエラー内容:\n{error}"
 
     return message
@@ -328,8 +344,8 @@ def main() -> None:
         logger.info(separator)
         return
 
-    target = get_current_time_slot()
-    if target is None:
+    slot_info = get_current_time_slot()
+    if slot_info is None:
         current_time = datetime.datetime.now(JST).strftime("%H:%M")
         logger.info(
             "現在時刻 %s は取得対象の時間帯ではありません。処理をスキップします。",
@@ -338,6 +354,8 @@ def main() -> None:
         logger.info(separator)
         return
 
+    target, slot_time_str = slot_info
+
     url = SECTOR_RANKING_URL
 
     try:
@@ -345,7 +363,12 @@ def main() -> None:
     except Exception as exc:
         now = datetime.datetime.now(JST)
         datetime_str = now.strftime("%Y-%m-%d %H:%M")
-        error_message = format_error_message(datetime_str, target, str(exc))
+        error_message = format_error_message(
+            datetime_str,
+            target,
+            str(exc),
+            slot_time_str,
+        )
         success = send_sector_line_notify(error_message)
         if not success:
             logger.error("LINE通知の送信に失敗しました（エラー通知）")
@@ -369,6 +392,7 @@ def main() -> None:
 
     data: Dict[str, Any] = {
         "datetime": datetime_str_file,
+        "slot_time": slot_time_str,
         "url": url,
         "scraped_at": now.isoformat(),
         "sectors": sectors,
@@ -379,7 +403,13 @@ def main() -> None:
     filepath = save_to_json(data, target)
 
     # LINE通知
-    message = format_sector_message(datetime_str_display, target, top5, bottom5)
+    message = format_sector_message(
+        datetime_str_display,
+        target,
+        top5,
+        bottom5,
+        slot_time_str,
+    )
     success = send_sector_line_notify(message)
     if not success:
         logger.error("LINE通知の送信に失敗しました（成功通知）")

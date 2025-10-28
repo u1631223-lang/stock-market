@@ -10,7 +10,7 @@ LINE Messaging APIを使用して、スクレイピング結果の通知を送�
 import os
 import time
 import requests
-from typing import List, Dict
+from typing import Dict, List, Optional
 from config import LINE_MESSAGING_API_PUSH, RETRY_COUNT, RETRY_DELAYS
 
 
@@ -112,7 +112,13 @@ def send_line_notify(message: str, token: str = None, user_id: str = None) -> bo
     return False
 
 
-def format_success_message(datetime_str: str, target: str, rankings: List[Dict], previous_rankings: List[Dict] = None) -> str:
+def format_success_message(
+    datetime_str: str,
+    target: str,
+    rankings: List[Dict],
+    previous_rankings: Optional[List[Dict]] = None,
+    slot_time: Optional[str] = None,
+) -> str:
     """
     成功時のメッセージをフォーマートする
 
@@ -121,6 +127,7 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict],
         target: "morning" or "afternoon"
         rankings: ランキングデータのリスト
         previous_rankings: 前回のランキングデータ（オプション）
+        slot_time: 取得対象の予定時刻（例: "09:20"）
 
     Returns:
         str: フォーマット済みメッセージ
@@ -138,10 +145,11 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict],
     """
     # 日本語の時間帯名
     target_name = "午前中資金流入" if target == "morning" else "午後資金流入"
+    slot_note = f"（対象時刻: {slot_time}）" if slot_time else ""
 
     # 基本メッセージ
     message = f"📊 {datetime_str}\n"
-    message += f"{target_name}ランキング\n"
+    message += f"{target_name}ランキング{slot_note}\n"
 
     # 前回ランキングから銘柄コード→順位のマップを作成
     prev_rank_map = {}
@@ -206,7 +214,12 @@ def format_success_message(datetime_str: str, target: str, rankings: List[Dict],
     return message
 
 
-def format_error_message(datetime_str: str, target: str, error: str) -> str:
+def format_error_message(
+    datetime_str: str,
+    target: str,
+    error: str,
+    slot_time: Optional[str] = None,
+) -> str:
     """
     エラー時のメッセージをフォーマットする
 
@@ -214,6 +227,7 @@ def format_error_message(datetime_str: str, target: str, error: str) -> str:
         datetime_str: 日時文字列
         target: "morning" or "afternoon"
         error: エラー内容
+        slot_time: 取得対象の予定時刻（例: "09:20"）
 
     Returns:
         str: フォーマット済みメッセージ
@@ -229,8 +243,10 @@ def format_error_message(datetime_str: str, target: str, error: str) -> str:
     target_name = "朝" if target == "morning" else "午後"
 
     # エラーメッセージ
+    slot_note = f"（対象時刻: {slot_time}）" if slot_time else ""
+
     message = f"❌ [エラー] {datetime_str}\n"
-    message += f"{target_name}ランキング取得失敗\n"
+    message += f"{target_name}ランキング{slot_note}取得失敗\n"
     message += f"\nエラー内容:\n{error}"
 
     return message

@@ -10,7 +10,7 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from bs4 import BeautifulSoup
@@ -105,7 +105,11 @@ except ImportError:
         return False
 
     def format_success_message(
-        datetime_str: str, target: str, rankings: List[Dict[str, str]]
+        datetime_str: str,
+        target: str,
+        rankings: List[Dict[str, str]],
+        previous_rankings: Optional[List[Dict[str, str]]] = None,
+        slot_time: Optional[str] = None,
     ) -> str:
         """成功通知の簡易フォーマット。"""
 
@@ -114,50 +118,65 @@ except ImportError:
             for item in rankings[:3]
         ]
         summary = ", ".join(summaries) if summaries else "ランキングデータなし"
-        return f"[SUCCESS] {datetime_str} {target}: {summary}"
+        slot_note = f"（対象時刻: {slot_time}）" if slot_time else ""
+        return f"[SUCCESS] {datetime_str} {target}{slot_note}: {summary}"
 
-    def format_error_message(datetime_str: str, target: str, error: str) -> str:
+    def format_error_message(
+        datetime_str: str,
+        target: str,
+        error: str,
+        slot_time: Optional[str] = None,
+    ) -> str:
         """エラー通知の簡易フォーマット。"""
 
-        return f"[ERROR] {datetime_str} {target}: {error}"
+        slot_note = f"（対象時刻: {slot_time}）" if slot_time else ""
+        return f"[ERROR] {datetime_str} {target}{slot_note}: {error}"
 
 
 RankingRecord = Dict[str, str]
 RankingList = List[RankingRecord]
 
 
-def get_current_time_slot() -> Optional[str]:
-    """現在時刻が属する取得対象を判定する。
-    
-    GitHub Actionsのcron実行には遅延が発生することがあるため、
-    設定時刻の±15分以内であれば該当する時間帯として判定する。
-    
-    注意: 複数の時間帯が重なる場合は、最も近い時刻の時間帯を返す。
+def get_current_time_slot() -> Optional[Tuple[str, str]]:
+    """現在時刻にもっとも近い取得対象と設定時刻を返す。
+
+    GitHub Actions の遅延により実行時刻が大きくずれても、同日のスロットを
+    優先的に割り当てる。該当するスロットが見つからない場合は ``None`` を返す。
     """
+
     now = datetime.datetime.now(JST)
-    
-    best_match = None
-    min_diff = float('inf')
-    
-    # 各TIME_SLOTに対して、最も近い時刻を探す
+
+    slots: List[Tuple[datetime.datetime, str, str]] = []
     for time_str, target in TIME_SLOTS.items():
         slot_hour, slot_minute = map(int, time_str.split(":"))
-        slot_time = now.replace(hour=slot_hour, minute=slot_minute, second=0, microsecond=0)
-        
-        # 現在時刻との差分を計算
-        time_diff = abs((now - slot_time).total_seconds())
-        
-        # ±15分（900秒）以内で、かつ最も近い時刻を選択
-        if time_diff <= 900 and time_diff < min_diff:
-            min_diff = time_diff
-            best_match = (time_str, target)
-    
-    if best_match:
-        time_str, target = best_match
-        logger.info(f"現在時刻 {now.strftime('%H:%M')} は {time_str} の実行時間帯です（許容範囲: ±15分）")
-        return target
-    
-    return None
+        slot_time = now.replace(
+            hour=slot_hour,
+            minute=slot_minute,
+            second=0,
+            microsecond=0,
+        )
+        slots.append((slot_time, time_str, target))
+
+    if not slots:
+        logger.warning("TIME_SLOTS が定義されていないため、実行時間帯を判定できません。")
+        return None
+
+    # 時刻順に並べたうえで、現在時刻以前の最新スロットを採用
+    slots.sort(key=lambda item: item[0])
+    past_slots = [item for item in slots if item[0] <= now]
+
+    if past_slots:
+        slot_time, time_str, target = past_slots[-1]
+    else:
+        # まだ当日の最初のスロット前の場合は最も早いスロットを使用
+        slot_time, time_str, target = slots[0]
+
+    logger.info(
+        "現在時刻 %s は %s の実行時間帯として処理します（許容幅制限なし）",
+        now.strftime("%H:%M"),
+        time_str,
+    )
+    return target, time_str
 
 
 def scrape_ranking(url: str) -> RankingList:
@@ -348,8 +367,8 @@ def main() -> None:
         logger.info(separator)
         return
 
-    target = get_current_time_slot()
-    if target is None:
+    slot_info = get_current_time_slot()
+    if slot_info is None:
         current_time = datetime.datetime.now(JST).strftime("%H:%M")
         logger.info(
             "現在時刻 %s は取得対象の時間帯ではありません。処理をスキップします。",
@@ -357,6 +376,8 @@ def main() -> None:
         )
         logger.info(separator)
         return
+
+    target, slot_time_str = slot_info
 
     url = URLS.get(target)
     if url is None:
@@ -369,7 +390,12 @@ def main() -> None:
         rankings = scrape_ranking(url)
     except Exception as exc:
         datetime_str = datetime.datetime.now(JST).strftime(DATETIME_FORMAT)
-        error_message = format_error_message(datetime_str, target, str(exc))
+        error_message = format_error_message(
+            datetime_str,
+            target,
+            str(exc),
+            slot_time_str,
+        )
         success = send_line_notify(error_message)
         if not success:
             logger.error("LINE通知の送信に失敗しました（エラー通知）")
@@ -382,6 +408,7 @@ def main() -> None:
     datetime_str = now.strftime(DATETIME_FORMAT)
     data: Dict[str, Any] = {
         "datetime": datetime_str,
+        "slot_time": slot_time_str,
         "target": target,
         "url": url,
         "scraped_at": now.isoformat(),
@@ -391,7 +418,13 @@ def main() -> None:
     filepath = save_to_json(data, target)
 
     # 前回のランキングと比較してメッセージを作成
-    message = format_success_message(datetime_str, target, rankings, previous_rankings)
+    message = format_success_message(
+        datetime_str,
+        target,
+        rankings,
+        previous_rankings,
+        slot_time_str,
+    )
     success = send_line_notify(message)
     if not success:
         logger.error("LINE通知の送信に失敗しました（成功通知）")
@@ -407,4 +440,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
