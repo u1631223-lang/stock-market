@@ -1,0 +1,137 @@
+{
+  "datetime": "20251028_1258",
+  "slot_time": "12:00",
+  "url": "https://kabutan.jp/warning/?mode=9_1",
+  "scraped_at": "2025-10-28T12:58:54.514858+09:00",
+  "sectors": [
+    {
+      "code": "0255",
+      "name": "繊維製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0261",
+      "name": "ガラス・土石",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0264",
+      "name": "金属製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0252",
+      "name": "鉱業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0253",
+      "name": "建設業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0274",
+      "name": "倉庫・運輸",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0251",
+      "name": "水産・農林業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0283",
+      "name": "サービス業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0256",
+      "name": "パルプ・紙",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0257",
+      "name": "化学",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0268",
+      "name": "精密機器",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0269",
+      "name": "その他製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0277",
+      "name": "小売業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0276",
+      "name": "卸売業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0260",
+      "name": "ゴム製品",
+      "change_percent": "0.00"
+    }
+  ],
+  "top5": [
+    {
+      "code": "0255",
+      "name": "繊維製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0261",
+      "name": "ガラス・土石",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0264",
+      "name": "金属製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0252",
+      "name": "鉱業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0253",
+      "name": "建設業",
+      "change_percent": "0.00"
+    }
+  ],
+  "bottom5": [
+    {
+      "code": "0255",
+      "name": "繊維製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0261",
+      "name": "ガラス・土石",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0264",
+      "name": "金属製品",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0252",
+      "name": "鉱業",
+      "change_percent": "0.00"
+    },
+    {
+      "code": "0253",
+      "name": "建設業",
+      "change_percent": "0.00"
+    }
+  ]
+}
