@@ -141,7 +141,7 @@ def get_current_time_slot() -> Optional[Tuple[str, str]]:
     """現在時刻にもっとも近い取得対象と設定時刻を返す。
 
     GitHub Actions の遅延により実行時刻が大きくずれても、同日のスロットを
-    優先的に割り当てる。該当するスロットが見つからない場合は ``None`` を返す。
+    優先的に割り当てる。まだ最初のスロット前であれば ``None`` を返す。
     """
 
     now = datetime.datetime.now(JST)
@@ -161,15 +161,20 @@ def get_current_time_slot() -> Optional[Tuple[str, str]]:
         logger.warning("TIME_SLOTS が定義されていないため、実行時間帯を判定できません。")
         return None
 
-    # 時刻順に並べたうえで、現在時刻以前の最新スロットを採用
+    # 時刻順に並べたうえで、現在時刻以前の最新スロットのみ採用
     slots.sort(key=lambda item: item[0])
     past_slots = [item for item in slots if item[0] <= now]
 
-    if past_slots:
-        slot_time, time_str, target = past_slots[-1]
-    else:
-        # まだ当日の最初のスロット前の場合は最も早いスロットを使用
-        slot_time, time_str, target = slots[0]
+    if not past_slots:
+        next_slot_time, next_time_str, _ = slots[0]
+        logger.info(
+            "現在時刻 %s は最初の実行時間帯 %s より前のためスキップします。",
+            now.strftime("%H:%M"),
+            next_time_str,
+        )
+        return None
+
+    slot_time, time_str, target = past_slots[-1]
 
     logger.info(
         "現在時刻 %s は %s の実行時間帯として処理します（許容幅制限なし）",

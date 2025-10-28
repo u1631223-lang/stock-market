@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import time
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
@@ -46,7 +47,10 @@ DATETIME_FORMAT = "%Y%m%d_%H%M"
 
 
 def get_current_time_slot() -> Optional[Tuple[str, str]]:
-    """現在時刻にもっとも近い取得対象と設定時刻を返す。"""
+    """現在時刻にもっとも近い取得対象と設定時刻を返す。
+
+    最初のスロットより前の時間帯で呼び出された場合は ``None`` を返す。
+    """
 
     now = datetime.datetime.now(JST)
 
@@ -68,10 +72,16 @@ def get_current_time_slot() -> Optional[Tuple[str, str]]:
     slots.sort(key=lambda item: item[0])
     past_slots = [item for item in slots if item[0] <= now]
 
-    if past_slots:
-        slot_time, time_str, target = past_slots[-1]
-    else:
-        slot_time, time_str, target = slots[0]
+    if not past_slots:
+        _, next_time_str, _ = slots[0]
+        logger.info(
+            "現在時刻 %s は最初の実行時間帯 %s より前のためスキップします。",
+            now.strftime("%H:%M"),
+            next_time_str,
+        )
+        return None
+
+    slot_time, time_str, target = past_slots[-1]
 
     logger.info(
         "現在時刻 %s は %s の実行時間帯として処理します（許容幅制限なし）",
@@ -158,17 +168,20 @@ def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
             change_percent_cell = cells[5]
             change_span = change_percent_cell.find("span")
             if change_span:
-                change_text = change_span.text.strip()
-                # %記号を除去
-                change_percent = change_text.replace("%", "").strip()
-                # "--" など数値化できない表示は無視
-                try:
-                    float(change_percent)
-                except ValueError:
-                    logger.warning(f"数値化できない前日比: {change_text}")
-                    continue
+                change_text = change_span.get_text(strip=True)
             else:
-                change_percent = "0.00"
+                change_text = change_percent_cell.get_text(strip=True)
+
+            change_text = change_text.replace(",", "").replace("％", "%")
+            change_text = change_text.replace("−", "-")
+            change_text = change_text.replace("前日比", "")
+
+            match = re.search(r"([-+]?\d+(?:\.\d+)?)", change_text)
+            if not match:
+                logger.warning(f"数値化できない前日比: {change_text}")
+                continue
+
+            change_percent = match.group(1)
 
             if code and name and change_percent:
                 sectors.append({
