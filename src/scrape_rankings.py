@@ -8,6 +8,7 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -32,6 +33,21 @@ JSON_INDENT = 2
 TOP_LIMIT = 10
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_ROOT = BASE_DIR / DATA_DIR
+
+# GitHub Actions の cron 文字列と対象スロットの対応表
+SCHEDULE_SLOT_OVERRIDES: Dict[str, Tuple[str, str]] = {
+    "20 0 * * 1-5": ("morning", "09:20"),
+    "35 0 * * 1-5": ("morning", "09:35"),
+    "2 3 * * 1-5": ("morning", "12:02"),
+    "47 3 * * 1-5": ("afternoon", "12:47"),
+    "32 5 * * 1-5": ("afternoon", "14:32"),
+}
+
+# ランキング取得対象外の cron（セクター別ランキング専用）
+SCHEDULE_SKIP_LIST = {
+    "0 3 * * 1-5",
+    "0 7 * * 1-5",
+}
 
 
 class JSTFormatter(logging.Formatter):
@@ -372,7 +388,50 @@ def main() -> None:
         logger.info(separator)
         return
 
-    slot_info = get_current_time_slot()
+    slot_info: Optional[Tuple[str, str]] = None
+
+    env_target = os.environ.get("RANKING_TARGET")
+    env_slot = os.environ.get("RANKING_SLOT")
+    if env_target and env_slot:
+        slot_info = (env_target, env_slot)
+        logger.info(
+            "環境変数オーバーライドを検出しました: target=%s, slot=%s",
+            env_target,
+            env_slot,
+        )
+
+    if slot_info is None:
+        schedule_env = (
+            os.environ.get("EVENT_SCHEDULE")
+            or os.environ.get("GITHUB_EVENT_SCHEDULE")
+            or ""
+        ).strip()
+        if schedule_env:
+            if schedule_env in SCHEDULE_SKIP_LIST:
+                logger.info(
+                    "GitHubスケジュール '%s' はランキング取得対象外のため処理をスキップします。",
+                    schedule_env,
+                )
+                logger.info(separator)
+                return
+            override = SCHEDULE_SLOT_OVERRIDES.get(schedule_env)
+            if override:
+                slot_info = override
+                logger.info(
+                    "GitHubスケジュール '%s' をスロット %s (%s) に割り当てます。",
+                    schedule_env,
+                    override[1],
+                    override[0],
+                )
+            else:
+                logger.info(
+                    "GitHubスケジュール '%s' に対応するランキングスロットが未定義のため自動判定にフォールバックします。",
+                    schedule_env,
+                )
+
+    if slot_info is None:
+        slot_info = get_current_time_slot()
+
     if slot_info is None:
         current_time = datetime.datetime.now(JST).strftime("%H:%M")
         logger.info(

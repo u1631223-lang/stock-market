@@ -45,6 +45,12 @@ logger = logging.getLogger(__name__)
 # 日時フォーマット
 DATETIME_FORMAT = "%Y%m%d_%H%M"
 
+# GitHub Actions の cron 文字列とセクター別スロットの対応表
+SECTOR_SCHEDULE_SLOT_OVERRIDES: Dict[str, Tuple[str, str]] = {
+    "0 3 * * 1-5": ("midday", "12:00"),
+    "0 7 * * 1-5": ("closing", "16:00"),
+}
+
 
 def get_current_time_slot() -> Optional[Tuple[str, str]]:
     """現在時刻にもっとも近い取得対象と設定時刻を返す。
@@ -357,7 +363,45 @@ def main() -> None:
         logger.info(separator)
         return
 
-    slot_info = get_current_time_slot()
+    slot_info: Optional[Tuple[str, str]] = None
+
+    env_target = os.environ.get("SECTOR_TARGET")
+    env_slot = os.environ.get("SECTOR_SLOT")
+    if env_target and env_slot:
+        slot_info = (env_target, env_slot)
+        logger.info(
+            "環境変数オーバーライドを検出しました: target=%s, slot=%s",
+            env_target,
+            env_slot,
+        )
+
+    if slot_info is None:
+        schedule_env = (
+            os.environ.get("EVENT_SCHEDULE")
+            or os.environ.get("GITHUB_EVENT_SCHEDULE")
+            or ""
+        ).strip()
+        if schedule_env:
+            override = SECTOR_SCHEDULE_SLOT_OVERRIDES.get(schedule_env)
+            if override:
+                slot_info = override
+                logger.info(
+                    "GitHubスケジュール '%s' をセクタースロット %s (%s) に割り当てます。",
+                    schedule_env,
+                    override[1],
+                    override[0],
+                )
+            else:
+                logger.info(
+                    "GitHubスケジュール '%s' はセクター別ランキング取得の対象ではないため処理をスキップします。",
+                    schedule_env,
+                )
+                logger.info(separator)
+                return
+
+    if slot_info is None:
+        slot_info = get_current_time_slot()
+
     if slot_info is None:
         current_time = datetime.datetime.now(JST).strftime("%H:%M")
         logger.info(

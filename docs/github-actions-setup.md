@@ -69,6 +69,8 @@ git push -u origin main
 2. `Scheduled Ranking Scrape` ワークフローが表示されることを確認
 3. 緑色のチェックマークが表示されていれば、YAMLに問題なし
 
+> ℹ️ `Run scraper` ステップでは `github.event.schedule` を `EVENT_SCHEDULE` 環境変数として渡し、スクリプト側で対象スロットを特定しています。想定外のスケジュールで実行された場合は自動的にスキップするようになりました。
+
 ### Step 6: 手動実行テスト (workflow_dispatch)
 
 1. `Actions` タブ → `Scheduled Ranking Scrape` をクリック
@@ -122,8 +124,9 @@ git push -u origin main
 手動実行が成功したら、自動実行の動作確認を行います。
 
 **実行スケジュール (JST):**
-- 朝: 09:15, 09:30, 12:00
-- 午後: 12:45, 14:30
+- 朝ランキング: 09:20, 09:35, 12:02
+- 午後ランキング: 12:47, 14:32
+- セクター別: 12:00, 16:00
 
 **確認方法:**
 1. 上記の時刻になったら、`Actions` タブを確認
