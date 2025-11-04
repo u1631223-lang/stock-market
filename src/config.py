@@ -13,8 +13,8 @@ URLS = {
     "afternoon": "https://finance.matsui.co.jp/ranking-day-trading-afternoon/index?condition=0&market=0"
 }
 
-# セクター別騰落ランキング用URL
-SECTOR_RANKING_URL = "https://kabutan.jp/warning/?mode=9_1"
+# SBI証券 業種別株価平均ランキング（前日比）
+SECTOR_URL = "https://www.sbisec.co.jp/ETGate/?OutSide=on&getFlg=on&_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_ActionID=DefaultAID&_DataStoreID=DSWPLETmgR001Control&burl=iris_ranking&cat1=market&cat2=ranking&dir=tl1-rnk%7Ctl2-stock%7Ctl3-industry%7Ctl4-idx%7Ctl5-uprate&file=index.html"
 
 # ===========================
 # スケジュール設定
