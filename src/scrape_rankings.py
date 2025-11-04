@@ -372,6 +372,49 @@ def load_previous_ranking(target: str) -> Optional[RankingList]:
     return None
 
 
+def check_recent_execution(target: str, threshold_minutes: int = 10) -> bool:
+    """
+    指定時間内に実行済みかチェック。
+
+    Args:
+        target: "morning" or "afternoon"
+        threshold_minutes: 閾値（分）、この時間以内の実行は重複とみなす
+
+    Returns:
+        bool: True=最近実行済み（スキップすべき）, False=実行すべき
+    """
+    target_dir = DATA_ROOT / target
+
+    if not target_dir.exists():
+        return False
+
+    # JSONファイルを新しい順に取得
+    json_files = sorted(
+        target_dir.glob("ranking_*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True
+    )
+
+    if not json_files:
+        return False
+
+    # 最新ファイルの作成時刻を確認
+    latest_file = json_files[0]
+    file_mtime = datetime.datetime.fromtimestamp(latest_file.stat().st_mtime, tz=JST)
+    now = datetime.datetime.now(JST)
+    diff_minutes = (now - file_mtime).total_seconds() / 60
+
+    if diff_minutes < threshold_minutes:
+        logger.info(
+            "%.1f分前に実行済みです（%s）。重複実行を防止するためスキップします。",
+            diff_minutes,
+            latest_file.name
+        )
+        return True
+
+    return False
+
+
 def main() -> None:
     """ランキング取得から保存までのメイン処理を実行する。"""
 
@@ -442,6 +485,12 @@ def main() -> None:
         return
 
     target, slot_time_str = slot_info
+
+    # 重複実行チェック（10分以内に実行済みならスキップ）
+    if check_recent_execution(target, threshold_minutes=10):
+        logger.info("重複実行を防止するため処理を終了します。")
+        logger.info(separator)
+        return
 
     url = URLS.get(target)
     if url is None:

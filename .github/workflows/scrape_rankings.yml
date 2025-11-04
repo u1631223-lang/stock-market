@@ -2,19 +2,21 @@ name: Scheduled Ranking Scrape
 
 on:
   schedule:
-    # 松井証券ランキング
-    # JST 09:20 - 朝ランキング（UTC 00:17,00:32は実行されないため00:20に変更）
-    - cron: '20 0 * * 1-5'  # matsui-morning-0920
-    # JST 09:35 - 朝ランキング（UTC 00:17,00:32は実行されないため00:35に変更）
-    - cron: '35 0 * * 1-5'  # matsui-morning-0935
+    # 松井証券ランキング（UTC 00:00-01:00は混雑するため複数時刻で試行）
+    # JST 09:10 - 朝ランキング（混雑回避: 早めに実行）
+    - cron: '10 0 * * 1-5'  # matsui-morning-0910
+    # JST 09:25 - 朝ランキング（混雑回避: 複数実行で確実性向上）
+    - cron: '25 0 * * 1-5'  # matsui-morning-0925
+    # JST 10:05 - 朝ランキング（混雑回避: UTC 01:00台で安定実行）
+    - cron: '5 1 * * 1-5'   # matsui-morning-1005
+    # JST 10:25 - 朝ランキング（混雑回避: 複数実行で確実性向上）
+    - cron: '25 1 * * 1-5'  # matsui-morning-1025
     # JST 12:00 - セクター別騰落ランキング（昼休み）
     - cron: '0 3 * * 1-5'   # sector-midday
-    # JST 12:02 - 朝ランキング（UTC 03:00は混雑時間帯のため03:02に変更）
-    - cron: '2 3 * * 1-5'   # matsui-morning-1202
-    # JST 12:45 - 午後ランキング
-    - cron: '47 3 * * 1-5'  # matsui-afternoon-1247
-    # JST 14:30 - 午後ランキング
-    - cron: '32 5 * * 1-5'  # matsui-afternoon-1432
+    # JST 12:35 - 午後ランキング
+    - cron: '35 3 * * 1-5'  # matsui-afternoon-1235
+    # JST 14:35 - 午後ランキング
+    - cron: '35 5 * * 1-5'  # matsui-afternoon-1435
     # JST 16:00 - セクター別騰落ランキング（大引け後）
     - cron: '0 7 * * 1-5'   # sector-closing
 
@@ -40,7 +42,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run matsui rankings scraper
-        if: github.event.schedule == '20 0 * * 1-5' || github.event.schedule == '35 0 * * 1-5' || github.event.schedule == '2 3 * * 1-5' || github.event.schedule == '47 3 * * 1-5' || github.event.schedule == '32 5 * * 1-5' || github.event_name == 'workflow_dispatch'
+        if: github.event.schedule == '10 0 * * 1-5' || github.event.schedule == '25 0 * * 1-5' || github.event.schedule == '5 1 * * 1-5' || github.event.schedule == '25 1 * * 1-5' || github.event.schedule == '35 3 * * 1-5' || github.event.schedule == '35 5 * * 1-5' || github.event_name == 'workflow_dispatch'
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_TARGET_USER_ID: ${{ secrets.LINE_TARGET_USER_ID }}
