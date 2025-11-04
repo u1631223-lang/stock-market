@@ -115,6 +115,7 @@ def scrape_sector_ranking() -> List[Dict[str, str]]:
 
         except requests.exceptions.RequestException as e:
             logger.warning("HTTP リクエスト失敗 (試行 %d/%d): %s", attempt, RETRY_COUNT, e)
+            logger.warning("ステータスコード: %s", getattr(e.response, 'status_code', 'N/A') if hasattr(e, 'response') else 'N/A')
 
             if attempt < RETRY_COUNT:
                 delay = RETRY_DELAYS[min(attempt - 1, len(RETRY_DELAYS) - 1)]
@@ -122,6 +123,7 @@ def scrape_sector_ranking() -> List[Dict[str, str]]:
                 time.sleep(delay)
             else:
                 logger.error("最大リトライ回数に達しました。スクレイピングを中止します。")
+                logger.error("最終エラー: %s", str(e))
                 raise
 
     # HTML パース
@@ -132,6 +134,11 @@ def scrape_sector_ranking() -> List[Dict[str, str]]:
 
     if not table:
         logger.error("ランキングテーブルが見つかりません")
+        # デバッグ情報
+        all_tables = soup.find_all("table")
+        logger.error(f"ページ内のテーブル数: {len(all_tables)}")
+        if soup.title:
+            logger.error(f"ページタイトル: {soup.title.get_text()}")
         raise ValueError("ランキングテーブルが見つかりません")
 
     # テーブルの行を取得
