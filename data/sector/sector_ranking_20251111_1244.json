@@ -1,0 +1,240 @@
+{
+  "datetime": "20251111_1244",
+  "url": "https://www.sbisec.co.jp/ETGate/?OutSide=on&getFlg=on&_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_ActionID=DefaultAID&_DataStoreID=DSWPLETmgR001Control&burl=iris_ranking&cat1=market&cat2=ranking&dir=tl1-rnk%7Ctl2-stock%7Ctl3-industry%7Ctl4-idx%7Ctl5-uprate&file=index.html",
+  "target": "midday",
+  "time_slot": "12:00",
+  "scraped_at": "2025-11-11T12:44:09.254307+09:00",
+  "rankings": [
+    {
+      "rank": "1",
+      "sector": "医薬品",
+      "price": "3,536.83",
+      "change": "+48.07(+1.38％)",
+      "prev_price": "3,488.76"
+    },
+    {
+      "rank": "2",
+      "sector": "空運業",
+      "price": "240.26",
+      "change": "+3.01(+1.27％)",
+      "prev_price": "237.25"
+    },
+    {
+      "rank": "3",
+      "sector": "その他製品",
+      "price": "7,656.68",
+      "change": "+84.63(+1.12％)",
+      "prev_price": "7,572.05"
+    },
+    {
+      "rank": "4",
+      "sector": "水産・農林業",
+      "price": "685.88",
+      "change": "+6.29(+0.93％)",
+      "prev_price": "679.59"
+    },
+    {
+      "rank": "5",
+      "sector": "電気・ガス業",
+      "price": "657.30",
+      "change": "+5.88(+0.90％)",
+      "prev_price": "651.42"
+    },
+    {
+      "rank": "6",
+      "sector": "電気機器",
+      "price": "6,338.74",
+      "change": "+56.33(+0.90％)",
+      "prev_price": "6,282.41"
+    },
+    {
+      "rank": "7",
+      "sector": "サービス業",
+      "price": "3,119.66",
+      "change": "+27.41(+0.89％)",
+      "prev_price": "3,092.25"
+    },
+    {
+      "rank": "8",
+      "sector": "情報・通信業",
+      "price": "8,130.54",
+      "change": "+66.28(+0.82％)",
+      "prev_price": "8,064.26"
+    },
+    {
+      "rank": "9",
+      "sector": "ｶﾞﾗｽ土石製品",
+      "price": "1,711.56",
+      "change": "+12.91(+0.76％)",
+      "prev_price": "1,698.65"
+    },
+    {
+      "rank": "10",
+      "sector": "非鉄金属",
+      "price": "3,467.73",
+      "change": "+19.56(+0.57％)",
+      "prev_price": "3,448.17"
+    },
+    {
+      "rank": "11",
+      "sector": "精密機器",
+      "price": "13,460.00",
+      "change": "+58.66(+0.44％)",
+      "prev_price": "13,401.34"
+    },
+    {
+      "rank": "12",
+      "sector": "輸送用機器",
+      "price": "4,881.64",
+      "change": "+17.39(+0.36％)",
+      "prev_price": "4,864.25"
+    },
+    {
+      "rank": "13",
+      "sector": "繊維製品",
+      "price": "818.48",
+      "change": "+2.89(+0.35％)",
+      "prev_price": "815.59"
+    },
+    {
+      "rank": "14",
+      "sector": "その他金融業",
+      "price": "1,167.03",
+      "change": "+1.80(+0.15％)",
+      "prev_price": "1,165.23"
+    },
+    {
+      "rank": "15",
+      "sector": "金属製品",
+      "price": "1,652.90",
+      "change": "+2.13(+0.13％)",
+      "prev_price": "1,650.77"
+    },
+    {
+      "rank": "16",
+      "sector": "ゴム製品",
+      "price": "5,383.91",
+      "change": "+4.15(+0.08％)",
+      "prev_price": "5,379.76"
+    },
+    {
+      "rank": "17",
+      "sector": "小売業",
+      "price": "2,255.24",
+      "change": "+0.27(+0.01％)",
+      "prev_price": "2,254.97"
+    },
+    {
+      "rank": "18",
+      "sector": "食料品",
+      "price": "2,413.05",
+      "change": "-1.35(-0.06％)",
+      "prev_price": "2,414.40"
+    },
+    {
+      "rank": "19",
+      "sector": "不動産業",
+      "price": "2,409.54",
+      "change": "-1.72(-0.07％)",
+      "prev_price": "2,411.26"
+    },
+    {
+      "rank": "20",
+      "sector": "石油石炭製品",
+      "price": "2,227.58",
+      "change": "-4.21(-0.19％)",
+      "prev_price": "2,231.79"
+    },
+    {
+      "rank": "21",
+      "sector": "証券商品先物",
+      "price": "769.37",
+      "change": "-1.63(-0.21％)",
+      "prev_price": "771.00"
+    },
+    {
+      "rank": "22",
+      "sector": "倉庫運輸関連",
+      "price": "4,158.52",
+      "change": "-11.56(-0.28％)",
+      "prev_price": "4,170.08"
+    },
+    {
+      "rank": "23",
+      "sector": "建設業",
+      "price": "2,470.72",
+      "change": "-8.25(-0.33％)",
+      "prev_price": "2,478.97"
+    },
+    {
+      "rank": "24",
+      "sector": "機械",
+      "price": "4,312.41",
+      "change": "-18.16(-0.42％)",
+      "prev_price": "4,330.57"
+    },
+    {
+      "rank": "25",
+      "sector": "保険業",
+      "price": "2,802.50",
+      "change": "-13.88(-0.49％)",
+      "prev_price": "2,816.38"
+    },
+    {
+      "rank": "26",
+      "sector": "銀行業",
+      "price": "459.27",
+      "change": "-2.29(-0.50％)",
+      "prev_price": "461.56"
+    },
+    {
+      "rank": "27",
+      "sector": "鉱業",
+      "price": "856.09",
+      "change": "-5.39(-0.63％)",
+      "prev_price": "861.48"
+    },
+    {
+      "rank": "28",
+      "sector": "卸売業",
+      "price": "4,759.76",
+      "change": "-35.78(-0.75％)",
+      "prev_price": "4,795.54"
+    },
+    {
+      "rank": "29",
+      "sector": "化学",
+      "price": "2,499.16",
+      "change": "-20.07(-0.80％)",
+      "prev_price": "2,519.23"
+    },
+    {
+      "rank": "30",
+      "sector": "鉄鋼",
+      "price": "724.82",
+      "change": "-7.80(-1.06％)",
+      "prev_price": "732.62"
+    },
+    {
+      "rank": "31",
+      "sector": "パルプ・紙",
+      "price": "556.53",
+      "change": "-6.17(-1.10％)",
+      "prev_price": "562.70"
+    },
+    {
+      "rank": "32",
+      "sector": "海運業",
+      "price": "1,705.56",
+      "change": "-21.87(-1.27％)",
+      "prev_price": "1,727.43"
+    },
+    {
+      "rank": "33",
+      "sector": "陸運業",
+      "price": "2,253.45",
+      "change": "-31.32(-1.37％)",
+      "prev_price": "2,284.77"
+    }
+  ]
+}
