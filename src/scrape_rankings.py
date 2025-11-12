@@ -36,11 +36,12 @@ DATA_ROOT = BASE_DIR / DATA_DIR
 
 # GitHub Actions の cron 文字列と対象スロットの対応表
 SCHEDULE_SLOT_OVERRIDES: Dict[str, Tuple[str, str]] = {
-    "20 0 * * 1-5": ("morning", "09:20"),
-    "35 0 * * 1-5": ("morning", "09:35"),
-    "2 3 * * 1-5": ("morning", "12:02"),
-    "47 3 * * 1-5": ("afternoon", "12:47"),
-    "32 5 * * 1-5": ("afternoon", "14:32"),
+    "10 0 * * 1-5": ("morning", "09:10"),
+    "25 0 * * 1-5": ("morning", "09:25"),
+    "5 1 * * 1-5": ("morning", "10:05"),
+    "25 1 * * 1-5": ("morning", "10:25"),
+    "35 3 * * 1-5": ("afternoon", "12:35"),
+    "35 5 * * 1-5": ("afternoon", "14:35"),
 }
 
 # ランキング取得対象外の cron（セクター別ランキング専用）
@@ -372,16 +373,21 @@ def load_previous_ranking(target: str) -> Optional[RankingList]:
     return None
 
 
-def check_recent_execution(target: str, threshold_minutes: int = 10) -> bool:
+def check_recent_execution(
+    target: str,
+    slot_time: str,
+    threshold_minutes: int = 10,
+) -> bool:
     """
-    指定時間内に実行済みかチェック。
+    指定スロットの実行有無を判定して重複取得を避ける。
 
     Args:
         target: "morning" or "afternoon"
-        threshold_minutes: 閾値（分）、この時間以内の実行は重複とみなす
+        slot_time: 予定スロット時刻（例: "09:10"）
+        threshold_minutes: 時刻ベース判定のフォールバック閾値（分）
 
     Returns:
-        bool: True=最近実行済み（スキップすべき）, False=実行すべき
+        bool: True=重複のためスキップ, False=実行すべき
     """
     target_dir = DATA_ROOT / target
 
@@ -398,17 +404,45 @@ def check_recent_execution(target: str, threshold_minutes: int = 10) -> bool:
     if not json_files:
         return False
 
-    # 最新ファイルの作成時刻を確認
+    now = datetime.datetime.now(JST)
+    today = now.date()
+
+    # 予定スロットが同一の日付に既に保存されていないか確認
+    for candidate in json_files:
+        file_date = datetime.datetime.fromtimestamp(
+            candidate.stat().st_mtime, tz=JST
+        ).date()
+        if file_date != today:
+            continue
+
+        try:
+            with candidate.open("r", encoding="utf-8") as file:
+                data = json.load(file)
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        if data.get("target") != target:
+            continue
+
+        if data.get("slot_time") == slot_time:
+            logger.info(
+                "スロット %s (%s) は既に %s に保存済みのため重複実行をスキップします。",
+                slot_time,
+                target,
+                candidate.name,
+            )
+            return True
+
+    # スロット一致が見つからない場合は従来どおり直近実行間隔でフォールバック
     latest_file = json_files[0]
     file_mtime = datetime.datetime.fromtimestamp(latest_file.stat().st_mtime, tz=JST)
-    now = datetime.datetime.now(JST)
     diff_minutes = (now - file_mtime).total_seconds() / 60
 
     if diff_minutes < threshold_minutes:
         logger.info(
             "%.1f分前に実行済みです（%s）。重複実行を防止するためスキップします。",
             diff_minutes,
-            latest_file.name
+            latest_file.name,
         )
         return True
 
@@ -487,7 +521,7 @@ def main() -> None:
     target, slot_time_str = slot_info
 
     # 重複実行チェック（10分以内に実行済みならスキップ）
-    if check_recent_execution(target, threshold_minutes=10):
+    if check_recent_execution(target, slot_time_str, threshold_minutes=10):
         logger.info("重複実行を防止するため処理を終了します。")
         logger.info(separator)
         return

@@ -22,22 +22,13 @@ SECTOR_URL = "https://www.sbisec.co.jp/ETGate/?OutSide=on&getFlg=on&_ControlID=W
 
 # 松井証券ランキング取得時刻（JST）: HH:MM形式
 # キー: 時刻、値: 取得対象（morning or afternoon）
-# 注: GitHub Actions混雑回避のため複数時刻設定
 TIME_SLOTS = {
-    "09:10": "morning",
-    "09:25": "morning",
-    "10:05": "morning",
-    "10:25": "morning",
-    "12:35": "afternoon",
-    "14:35": "afternoon"
+    "09:20": "morning",
+    "13:00": "afternoon"
 }
 
-# セクター別騰落ランキング取得時刻（JST）: HH:MM形式
-# キー: 時刻、値: 取得対象（midday or closing）
-SECTOR_TIME_SLOTS = {
-    "12:00": "midday",    # 昼休み
-    "16:00": "closing"    # 大引け後
-}
+# セクター別騰落ランキングは廃止（通知を09:20と13:00の2回に集約）
+SECTOR_TIME_SLOTS = {}
 
 # ===========================
 # HTTP設定

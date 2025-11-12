@@ -3,23 +3,10 @@ name: Scheduled Ranking Scrape
 
 on:
   schedule:
-    # 松井証券ランキング（UTC 00:00-01:00は混雑するため複数時刻で試行）
-    # JST 09:10 - 朝ランキング（混雑回避: 早めに実行）
-    - cron: '10 0 * * 1-5'  # matsui-morning-0910
-    # JST 09:25 - 朝ランキング（混雑回避: 複数実行で確実性向上）
-    - cron: '25 0 * * 1-5'  # matsui-morning-0925
-    # JST 10:05 - 朝ランキング（混雑回避: UTC 01:00台で安定実行）
-    - cron: '5 1 * * 1-5'   # matsui-morning-1005
-    # JST 10:25 - 朝ランキング（混雑回避: 複数実行で確実性向上）
-    - cron: '25 1 * * 1-5'  # matsui-morning-1025
-    # JST 12:00 - セクター別騰落ランキング（昼休み）
-    - cron: '0 3 * * 1-5'   # sector-midday
-    # JST 12:35 - 午後ランキング
-    - cron: '35 3 * * 1-5'  # matsui-afternoon-1235
-    # JST 14:35 - 午後ランキング
-    - cron: '35 5 * * 1-5'  # matsui-afternoon-1435
-    # JST 16:00 - セクター別騰落ランキング（大引け後）
-    - cron: '0 7 * * 1-5'   # sector-closing
+    # JST 09:20 - 朝ランキング
+    - cron: '20 0 * * 1-5'  # matsui-morning-0920
+    # JST 13:00 - 午後ランキング
+    - cron: '0 4 * * 1-5'   # matsui-afternoon-1300
 
   workflow_dispatch:  # 手動実行を許可
 
@@ -43,22 +30,12 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run matsui rankings scraper
-        if: github.event.schedule == '10 0 * * 1-5' || github.event.schedule == '25 0 * * 1-5' || github.event.schedule == '5 1 * * 1-5' || github.event.schedule == '25 1 * * 1-5' || github.event.schedule == '35 3 * * 1-5' || github.event.schedule == '35 5 * * 1-5' || github.event_name == 'workflow_dispatch'
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_TARGET_USER_ID: ${{ secrets.LINE_TARGET_USER_ID }}
         run: |
           cd src
           python scrape_rankings.py
-
-      - name: Run sector rankings scraper
-        if: github.event.schedule == '0 3 * * 1-5' || github.event.schedule == '0 7 * * 1-5' || github.event_name == 'workflow_dispatch'
-        env:
-          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-          LINE_TARGET_USER_ID: ${{ secrets.LINE_TARGET_USER_ID }}
-        run: |
-          cd src
-          python scrape_sector_ranking.py
 
       - name: Configure Git
         run: |
