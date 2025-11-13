@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.9"
+    }
+  },
+  "env": {
+    "LINE_CHANNEL_ACCESS_TOKEN": "@line_channel_access_token",
+    "LINE_TARGET_USER_ID": "@line_target_user_id",
+    "TRADINGVIEW_SECRET": "@tradingview_secret"
+  }
+}
