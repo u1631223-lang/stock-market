@@ -27,8 +27,11 @@ TIME_SLOTS = {
     "13:00": "afternoon"
 }
 
-# セクター別騰落ランキングは廃止（通知を09:20と13:00の2回に集約）
-SECTOR_TIME_SLOTS = {}
+# セクター別騰落ランキング取得時刻（JST）: HH:MM形式
+SECTOR_TIME_SLOTS = {
+    "11:45": "midday",
+    "16:00": "close"
+}
 
 # ===========================
 # HTTP設定

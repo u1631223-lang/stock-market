@@ -3,10 +3,14 @@ name: Scheduled Ranking Scrape
 
 on:
   schedule:
-    # JST 09:20 - 朝ランキング
+    # JST 09:20 - 朝ランキング（松井証券）
     - cron: '20 0 * * 1-5'  # matsui-morning-0920
-    # JST 13:00 - 午後ランキング
+    # JST 11:45 - セクター別ランキング（前場終了時）
+    - cron: '45 2 * * 1-5'  # sector-midday-1145
+    # JST 13:00 - 午後ランキング（松井証券）
     - cron: '0 4 * * 1-5'   # matsui-afternoon-1300
+    # JST 16:00 - セクター別ランキング（大引け後）
+    - cron: '0 7 * * 1-5'   # sector-close-1600
 
   workflow_dispatch:  # 手動実行を許可
 
@@ -36,6 +40,14 @@ jobs:
         run: |
           cd src
           python scrape_rankings.py
+
+      - name: Run sector rankings scraper
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_TARGET_USER_ID: ${{ secrets.LINE_TARGET_USER_ID }}
+        run: |
+          cd src
+          python scrape_sector_rankings.py
 
       - name: Configure Git
         run: |
