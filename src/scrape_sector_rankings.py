@@ -86,6 +86,7 @@ DATETIME_FORMAT = "%Y%m%d_%H%M"
 def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
     """
     SBI証券の業種別騰落率ランキングを取得する。
+    上位5位（1~5位）と下位5位（29~33位）を取得。
 
     Args:
         url: スクレイピング対象URL
@@ -131,7 +132,7 @@ def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
     if not table:
         raise AttributeError("業種別ランキングテーブルが見つかりません。HTML構造が変更された可能性があります。")
 
-    rankings = []
+    all_rankings = []
     rows = table.find_all("tr")
 
     for row in rows[1:]:  # ヘッダー行をスキップ
@@ -148,7 +149,7 @@ def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
             value = cols[3].get_text(strip=True) if len(cols) > 3 else ""
             change = cols[4].get_text(strip=True) if len(cols) > 4 else ""
 
-            rankings.append({
+            all_rankings.append({
                 "rank": rank,
                 "sector": sector,
                 "change_percent": change_percent,
@@ -156,19 +157,21 @@ def scrape_sector_ranking(url: str) -> List[Dict[str, str]]:
                 "change": change,
             })
 
-            # トップ10のみ取得
-            if len(rankings) >= 10:
-                break
-
         except (IndexError, AttributeError) as exc:
             logger.warning("行の解析をスキップしました: %s", exc)
             continue
 
-    if not rankings:
+    if not all_rankings:
         raise ValueError("ランキングデータが取得できませんでした")
 
-    logger.info("セクター別ランキングを %d 件取得しました", len(rankings))
-    return rankings
+    # 上位5位（1~5位）と下位5位（29~33位）を抽出
+    top_5 = all_rankings[:5]
+    bottom_5 = all_rankings[28:33] if len(all_rankings) >= 33 else []
+    
+    selected_rankings = top_5 + bottom_5
+
+    logger.info("セクター別ランキングを %d 件取得しました（上位5位+下位5位）", len(selected_rankings))
+    return selected_rankings
 
 
 # ===========================
@@ -212,6 +215,7 @@ def format_success_message(
 ) -> str:
     """
     セクター別ランキング取得成功時のLINEメッセージを作成する。
+    上位5位と下位5位を区別して表示。
 
     Args:
         datetime_str: 実行日時文字列
@@ -234,9 +238,11 @@ def format_success_message(
         f"📊 {formatted_time}",
         f"業種別騰落率ランキング（{slot_name}）",
         "",
+        "【上位5業種】",
     ]
 
-    for item in rankings[:10]:
+    # 上位5位
+    for item in rankings[:5]:
         rank = item.get("rank", "?")
         sector = item.get("sector", "不明")
         change_pct = item.get("change_percent", "N/A")
@@ -250,6 +256,26 @@ def format_success_message(
             color = "⚪"
 
         lines.append(f"{rank}位: {sector} {color}{change_pct}")
+
+    # 下位5位（29~33位）
+    if len(rankings) > 5:
+        lines.append("")
+        lines.append("【下位5業種】")
+        
+        for item in rankings[5:]:
+            rank = item.get("rank", "?")
+            sector = item.get("sector", "不明")
+            change_pct = item.get("change_percent", "N/A")
+
+            # 色インジケーター
+            if "+" in change_pct:
+                color = "🟢"
+            elif "-" in change_pct:
+                color = "🔴"
+            else:
+                color = "⚪"
+
+            lines.append(f"{rank}位: {sector} {color}{change_pct}")
 
     return "\n".join(lines)
 
