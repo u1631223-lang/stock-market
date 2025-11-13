@@ -409,9 +409,17 @@ def check_recent_execution(
 
     # 予定スロットが同一の日付に既に保存されていないか確認
     for candidate in json_files:
-        file_date = datetime.datetime.fromtimestamp(
-            candidate.stat().st_mtime, tz=JST
-        ).date()
+        # ファイル名から日付を抽出（ranking_YYYYMMDD_HHMM.json）
+        try:
+            name_parts = candidate.stem.split("_")
+            if len(name_parts) >= 2:
+                file_date_str = name_parts[1]  # YYYYMMDD
+                file_date = datetime.datetime.strptime(file_date_str, "%Y%m%d").date()
+            else:
+                continue
+        except (ValueError, IndexError):
+            continue
+
         if file_date != today:
             continue
 
